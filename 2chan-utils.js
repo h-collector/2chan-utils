@@ -25,19 +25,43 @@
     }).bind('load', function() {
          $(this).css({ opacity: 1 })
     });
+
     //add autorefresh and counter
     var $contres = $('#contres a');
     if($contres.length){
+        var cookie = "AutoRefresh=";
         var count   = 60;
         var tick    = count;
-        var $timer  = $('<span>'+tick+' s</span>').appendTo($('#contres'));
-        var counter = setInterval(counter, 1000);
-        function counter() {
+        var counterId = null;
+        var $timer  = $('<span> '+tick+' s</span>').appendTo($('#contres'));
+        var counter = function() {
           if (--tick <= 0) {
              $contres.click();
              tick = count
           }
-          $timer.text(tick + " s")
+          $timer.text(' ' + tick + ' s')
         }
+        var chBox = $('<input/>', {type:'checkbox'})
+            .appendTo($('<label/>', {text:"[Auto]"}).insertBefore($timer))
+            .change(function(){
+                if(counterId) {//stop autorefresh
+                    clearInterval(counterId);
+                    counterId = null;
+                    document.cookie = cookie + ":; expires = Thu, 01-Jan-70 00:00:01 GMT; path=/;"
+                } else {//start autorefresh
+                    counterId = setInterval(counter, 1000);
+                    document.cookie = cookie + "1; path=/;"
+                }
+            })
+            //restore state of checkbox on page refresh
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(cookie) == 0) { 
+                    chBox.click();//set checkbox checked and start counter
+                    break;
+                }
+            }
     }
 })(jQuery)
