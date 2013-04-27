@@ -12,56 +12,68 @@
         e.preventDefault(); 
         var $img=$(this);
         if(!$img.data('srcfull')){
-            $img.data('srcfull', $img.parent().attr('href'))
-                .attr({
+            var href = $img.parent().attr('href');
+            $img.data({
+                   srcfull: href,
+                   srcalt : href
+                }).attr({
                     height:'auto',
                     width: 'auto'
                 })
         }
-        var src = $img.data('srcfull');
-        $img.data('srcfull',$img.attr('src'))
+        var src = $img.data('srcalt');
+        $img.data('srcalt',$img.attr('src'))
             .css({ opacity: 0.5 })
             .attr('src', src)
     }).bind('load', function() {
-         $(this).css({ opacity: 1 })
+         var $img = $(this);
+             $img.css({
+             opacity: 1,
+             border : ($img.attr('src') === $img.data('srcfull')) 
+                    ? '1px solid #f00'
+                    : '0'
+         });
     });
-
     //add autorefresh and counter
     var $contres = $('#contres a');
     if($contres.length){
         var cookie = "AutoRefresh=";
-        var count   = 60;
-        var tick    = count;
-        var counterId = null;
-        var $timer  = $('<span> '+tick+' s</span>').appendTo($('#contres'));
-        var counter = function() {
-          if (--tick <= 0) {
-             $contres.click();
-             tick = count
-          }
-          $timer.text(' ' + tick + ' s')
-        }
+        var count = 60;
+        var $timer = $('<span> '+count+' s</span>').appendTo($('#contres'));
+        var counter = {//simple counter object
+            tick     : count,
+            id       : undefined,
+            start    : function(){ this.id = setInterval(this.ticktock, 1000) },
+            stop     : function(){ this.id = clearInterval(this.id) },
+            isRunning: function(){ return this.id !== undefined },
+            ticktock : function() {
+              if (--counter.tick <= 0) {
+                 $contres.click();
+                 counter.tick = count
+              }
+              $timer.text(' ' + counter.tick + ' s')
+            }
+        };
         var chBox = $('<input/>', {type:'checkbox'})
             .appendTo($('<label/>', {text:"[Auto]"}).insertBefore($timer))
             .change(function(){
-                if(counterId) {//stop autorefresh
-                    clearInterval(counterId);
-                    counterId = null;
+                if(counter.isRunning()) {//stop autorefresh
+                    counter.stop();
                     document.cookie = cookie + ":; expires = Thu, 01-Jan-70 00:00:01 GMT; path=/;"
                 } else {//start autorefresh
-                    counterId = setInterval(counter, 1000);
+                    counter.start();
                     document.cookie = cookie + "1; path=/;"
                 }
             })
-            //restore state of checkbox on page refresh
-            var ca = document.cookie.split(';');
-            for (var i = 0; i < ca.length; i++) {
-                var c = ca[i];
-                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-                if (c.indexOf(cookie) == 0) { 
-                    chBox.click();//set checkbox checked and start counter
-                    break;
-                }
+        //restore state of checkbox on page refresh
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(cookie) == 0) { 
+                chBox.click();
+                break;
             }
+        }
     }
 })(jQuery)
