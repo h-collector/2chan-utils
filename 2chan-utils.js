@@ -1,12 +1,75 @@
-(function($){  
-    var href = location.href.split(/\?|#/)[0];
+(function($){
+    String.prototype.replaceArray = function(find, replace) {
+        var replaceString = this;
+        for (var i = 0; i < find.length; i++)
+            replaceString = replaceString.replace(find[i], replace[i]);
+        return replaceString;
+    };
+    //could be faster by using vanilla js but, it's more fun using jQuery XD
+    $.fn.searchAndReplace = function(pattern, replacement) {
+        if(this.length === 0) 
+            return this;
+
+        this.contents().each(function () {
+            if (this.nodeType == 3) { // Text only
+                if($.isArray(pattern))  $(this).replaceWith($(this).text().replaceArray(pattern,replacement));
+                else                    $(this).replaceWith($(this).text().replace(pattern,replacement));
+            } else if (this.nodeType === 1 && this.childNodes && !/(script|style)/i.test(this.tagName)){ // Child element
+                $(this).searchAndReplace(pattern, replacement);
+            }
+        });
+        return this;
+    };
+
+    var axfc = {//didn't use full names but
+		Sc: "Scandium",
+		He: "Helium",
+		Ne: "Neon",
+		H:  "Hydrogen",
+		Li: "Lithium",
+		N:  "Nitrogen",
+		Si: "Silicon",
+		C:  "Carbon",
+		O:  "Oxygen",
+		Al: "Aluminium",
+		S:  "Sulphur",
+		P:  "Phosphorus",
+		Ar: "Argon",
+		B:  "Boron",
+		K:  "Potassium",
+		F:  "Fluorine",
+		Be: "Beryllium",
+		Na: "Sodium",
+		Ca: "Calcium",
+		Mg: "Magnesium",
+		Cl: "Chlorine"
+	};
+    var axfcAlt      = $.map(axfc, function(element,index) {return index}).join('|');
+    var urlSplit     = location.href.split(/\?|#/);
     var $contentForm = $('form').eq(1);
     //remove ads, comment if you like them :D
     $('.chui > div, #rightad, #ufm + div, hr + b').remove();
-    //add post anchor link
-    $('.del').closest('td').html(function(i,html){
-        return html.replace(/No\.(\d+)/,'<a href="'+href+'#delcheck$1">No. $1</a>')
+    //add post anchor link and axfc uploader links
+    $contentForm.searchAndReplace(
+        [
+            /No\.(\d+)/g, /* post number */
+            new RegExp('(' + axfcAlt + ')_([0-9]{4,8})','g')/* links */
+        ],
+        [
+            '<a href="'+urlSplit[0]+'#delcheck$1" class="postanchor">No. $1</a>',
+            '<a href="http://www1.axfc.net/uploader/$1/so/$2">$&</a>'
+        ]
+    );
+    //add post highlight
+    var $highlight = $();
+    $('<style type="text/css"> .highlight{ background: #F0C0B0} </style>').appendTo('head');
+    $('.postanchor').click(function(e){
+        $highlight.removeClass('highlight');
+        $highlight = $(this).closest('td').addClass('highlight');
     });
+    if(urlSplit[1])
+        $highlight = $('#'+urlSplit[1]).closest('td').addClass('highlight');
+
     //add image expanding on click
     $contentForm.find('img').click(function(e){ 
         e.preventDefault(); 
