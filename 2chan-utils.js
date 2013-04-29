@@ -10,18 +10,28 @@
         if(this.length === 0) 
             return this;
 
+        var isArray = $.isArray(pattern);
         this.contents().each(function () {
             if (this.nodeType == 3) { // Text only
-                if($.isArray(pattern))  $(this).replaceWith($(this).text().replaceArray(pattern,replacement));
-                else                    $(this).replaceWith($(this).text().replace(pattern,replacement));
+                if(isArray)  $(this).replaceWith($(this).text().replaceArray(pattern,replacement));
+                else         $(this).replaceWith($(this).text().replace(pattern,replacement));
             } else if (this.nodeType === 1 && this.childNodes && !/(script|style)/i.test(this.tagName)){ // Child element
                 $(this).searchAndReplace(pattern, replacement);
             }
         });
         return this;
     };
-
-    var axfc = {//didn't use full names but
+    //futalog links
+    var futalog = {
+        su : 'nijibox5.com/futabafiles/tubu/src/auth.redirect.php?', /* 12 */
+        sa : 'nijibox6.com/futabafiles/001/src/auth.redirect.php?',  /* 12 */
+        ss : 'nijibox5.com/futabafiles/kobin/src/auth.redirect.php?',/* 24 */
+        sq : 'nijibox6.com/futabafiles/mid/src/auth.redirect.php?',  /* 48 key */
+        sp : 'nijibox2.com/futabafiles/003/src/auth.redirect.php?'   /* 60 */
+    };
+    var futaAlt = $.map(futalog, function(element,index) {return index}).join('|');
+    //axfc uploader links
+	var axfc = {//didn't use full names but
 		Sc: "Scandium",
 		He: "Helium",
 		Ne: "Neon",
@@ -45,31 +55,63 @@
 		Cl: "Chlorine"
 	};
     var axfcAlt      = $.map(axfc, function(element,index) {return index}).join('|');
+    //////////////////
     var urlSplit     = location.href.split(/\?|#/);
     var $contentForm = $('form').eq(1);
     //remove ads, comment if you like them :D
     $('.chui > div, #rightad, #ufm + div, hr + b').remove();
     //add post anchor link and axfc uploader links
+    var sidebar = {};
     $contentForm.searchAndReplace(
         [
-            /No\.(\d+)/g, /* post number */
-            new RegExp('(' + axfcAlt + ')_([0-9]{4,8})','g')/* links */
+            /No\.(\d+)/g,                                       /* post number */
+            new RegExp('(' + axfcAlt + ')_([0-9]{4,8})','g'),      /* axfc links */
+            new RegExp('(' + futaAlt + ')[0-9]{5,7}\.[a-zA-Z0-9]{2,4}','g') /* futalog links */
         ],
         [
-            '<a href="'+urlSplit[0]+'#delcheck$1" class="postanchor">No. $1</a>',
-            '<a href="http://www1.axfc.net/uploader/$1/so/$2">$&</a>'
+            '<a href="'+urlSplit[0]+'#delcheck$1" class="postanchor">$&</a>',
+            function(m, pre, num){
+                return sidebar[m] = '<a href="http://www1.axfc.net/uploader/'+pre+'/so/'+num+'" class="axfc">'+m+'</a>'
+            },
+            function(m, pre){
+                return sidebar[m] = '<a href="http://www.'+futalog[pre]+m+'" class="futalog">'+m+'</a>'
+            }
         ]
     );
     //add post highlight
     var $highlight = $();
-    $('<style type="text/css"> .highlight{ background: #F0C0B0} </style>').appendTo('head');
+    $('<style type="text/css">            \n\
+        .highlight { background: #F0C0B0 }\n\
+        .postanchor{ }                    \n\
+        .axfc      { background: #F0C0B0; text-decoration:none }\n\
+        .futalog   { background: #00ee00; text-decoration:none }\n\
+      </style>').appendTo('head');
     $('.postanchor').click(function(e){
+        var target = '#'+$(this).attr('href').split(/\?|#/)[1];
         $highlight.removeClass('highlight');
-        $highlight = $(this).closest('td').addClass('highlight');
+        $highlight = $(target).closest('td').addClass('highlight');
     });
     if(urlSplit[1])
         $highlight = $('#'+urlSplit[1]).closest('td').addClass('highlight');
-
+    //add found links to futalog or axfc uploader to sidebar
+    var $placeholder = $('<div/>').css({ 
+            padding:  5,
+            overflow:'auto',
+            position:'fixed',/* absolute + $(window).scrollTop()*/
+            right:    0,
+            width:    100,
+            border:   '1px solid #000'
+    });
+    $.each(sidebar, function(index, value){
+        $(value).css({display:'block'}).appendTo($placeholder)
+    });
+    $placeholder.appendTo('body');
+    var wHeight = $(window).height();
+    var pHeight = Math.min($placeholder.height(),wHeight); 
+    $placeholder.css({
+        top :   Math.max(0, ((wHeight - pHeight) / 2) ),
+        height: pHeight
+    });
     //add image expanding on click
     $contentForm.find('img').click(function(e){ 
         e.preventDefault(); 
