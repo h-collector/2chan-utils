@@ -1,3 +1,14 @@
+/**
+ * Script for 2chan.net futaba board adding:
+ * - inline image expansion, 
+ * - single post anchoring and post highlight , 
+ * - futalog and axfc uploader autolinking with highlight and unique links in sidebar 
+ * - page autorefresh on new content, 
+ * - removing ads. 
+ * To use with Opera Scripter extension .
+ * 
+ * @author h-collector <githcoll@gmail.com>
+ */
 (function($){
     String.prototype.replaceArray = function(find, replace) {
         var replaceString = this;
@@ -85,6 +96,13 @@
         .postanchor{ }                    \n\
         .axfc      { background: #F0C0B0; text-decoration:none }\n\
         .futalog   { background: #00ee00; text-decoration:none }\n\
+        .sidebar   { position: fixed; right: 0; width: 100px;\n\
+                     padding: 5px; overflow: auto;\n\
+                     border: 1px solid #a08070; }\n\
+        .stickynav { position: fixed; top: 50px; right: 10px }\n\
+        .pointer   { background: #F0C0B0; text-decoration:none; cursor:pointer;\n\
+                     text-align:center; padding:0 2px; margin:2px; font-size:140%;\n\
+                     display:inline-block; border: 1px solid #a08070; }\n\
       </style>').appendTo('head');
     $('.postanchor').click(function(e){
         var target = '#'+$(this).attr('href').split(/\?|#/)[1];
@@ -94,24 +112,31 @@
     if(urlSplit[1])
         $highlight = $('#'+urlSplit[1]).closest('td').addClass('highlight');
     //add found links to futalog or axfc uploader to sidebar
-    var $placeholder = $('<div/>').css({ 
-            padding:  5,
-            overflow:'auto',
-            position:'fixed',/* absolute + $(window).scrollTop()*/
-            right:    0,
-            width:    100,
-            border:   '1px solid #000'
-    });
-    $.each(sidebar, function(index, value){
-        $(value).css({display:'block'}).appendTo($placeholder)
-    });
-    $placeholder.appendTo('body');
-    var wHeight = $(window).height();
-    var pHeight = Math.min($placeholder.height(),wHeight); 
-    $placeholder.css({
-        top :   Math.max(0, ((wHeight - pHeight) / 2) ),
-        height: pHeight
-    });
+
+    var i, count=0;
+	for (i in sidebar)
+	    if (sidebar.hasOwnProperty(i))
+	        count++;
+    if(count > 0 ){
+        var $placeholder = $('<div/>', {'class':'sidebar'});
+        $.each(sidebar, function(index, value){
+            $(value).css({display:'block'}).appendTo($placeholder)
+        });
+        $placeholder.appendTo('body');
+        var wHeight = $(window).height();
+        var pHeight = Math.min($placeholder.height(),wHeight); 
+        $placeholder.css({
+            top :   Math.max(0, ((wHeight - pHeight) / 2) ),
+            height: pHeight
+        });
+    }
+
+    //add top/bottom sticky nav
+    $('body').append(
+        $('<div/>',{'class':'stickynav'})
+          .append($('<a/>',{text:'▲', href:urlSplit[0]+'#top','class':'pointer', title:'Top'}))
+          .append($('<a/>',{text:'▼', href:urlSplit[0]+'#ufm','class':'pointer', title:'Bottom'}))
+    ).attr('id','top');
     //add image expanding on click
     $contentForm.find('img').click(function(e){ 
         e.preventDefault(); 
