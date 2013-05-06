@@ -23,38 +23,38 @@
     };
     //futalog links
     var futalog = {
-        su : 'nijibox5.com/futabafiles/tubu/src/auth.redirect.php?', /* 12 */
-        sa : 'nijibox6.com/futabafiles/001/src/auth.redirect.php?',  /* 12 */
-        ss : 'nijibox5.com/futabafiles/kobin/src/auth.redirect.php?',/* 24 */
+        su : 'nijibox5.com/futabafiles/tubu/src/', /* 12 */
+        sa : 'nijibox6.com/futabafiles/001/src/',  /* 12 */
+        ss : 'nijibox5.com/futabafiles/kobin/src/',/* 24 */
         sq : 'nijibox6.com/futabafiles/mid/src/auth.redirect.php?',  /* 48 key */
-        sp : 'nijibox2.com/futabafiles/003/src/auth.redirect.php?'   /* 60 */
+        sp : 'nijibox2.com/futabafiles/003/src/'   /* 60 */
     };
-    var futaAlt = $.map(futalog, function(element,index) {return index}).join('|');
+    var futaAlt = $.map(futalog, function(e,i) {return i}).join('|');
     //axfc uploader links
-	var axfc = {//didn't use full names but
-		Sc: "Scandium",
-		He: "Helium",
-		Ne: "Neon",
-		H:  "Hydrogen",
-		Li: "Lithium",
-		N:  "Nitrogen",
-		Si: "Silicon",
-		C:  "Carbon",
-		O:  "Oxygen",
-		Al: "Aluminium",
-		S:  "Sulphur",
-		P:  "Phosphorus",
-		Ar: "Argon",
-		B:  "Boron",
-		K:  "Potassium",
-		F:  "Fluorine",
-		Be: "Beryllium",
-		Na: "Sodium",
-		Ca: "Calcium",
-		Mg: "Magnesium",
-		Cl: "Chlorine"
-	};
-    var axfcAlt      = $.map(axfc, function(element,index) {return index}).join('|');
+    var axfc = {//didn't use full names but
+        Sc: "Scandium",
+        He: "Helium",
+        Ne: "Neon",
+        H:  "Hydrogen",
+        Li: "Lithium",
+        N:  "Nitrogen",
+        Si: "Silicon",
+        C:  "Carbon",
+        O:  "Oxygen",
+        Al: "Aluminium",
+        S:  "Sulphur",
+        P:  "Phosphorus",
+        Ar: "Argon",
+        B:  "Boron",
+        K:  "Potassium",
+        F:  "Fluorine",
+        Be: "Beryllium",
+        Na: "Sodium",
+        Ca: "Calcium",
+        Mg: "Magnesium",
+        Cl: "Chlorine"
+    };
+    var axfcAlt      = $.map(axfc, function(e,i) {return i}).join('|');
     //////////////////
     var urlSplit     = location.href.split(/\?|#/);
     var $contentForm = $('form').eq(1);
@@ -66,7 +66,7 @@
         [
             /No\.(\d+)/g,                                       /* post number */
             new RegExp('(' + axfcAlt + ')_([0-9]{4,8})','g'),      /* axfc links */
-            new RegExp('(' + futaAlt + ')[0-9]{5,7}\.[a-zA-Z0-9]{2,4}','g') /* futalog links */
+            new RegExp('(' + futaAlt + ')[0-9]{5,7}(\.[a-zA-Z0-9]{2,4})?','g') /* futalog links */
         ],
         [
             '<a href="'+urlSplit[0]+'#delcheck$1" class="postanchor">$&</a>',
