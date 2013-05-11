@@ -103,6 +103,7 @@
         .pointer   { background: #F0C0B0; text-decoration:none; cursor:pointer;\n\
                      padding:0 2px; font-size:120%;\n\
                      display:inline-block; border:1px solid #a08070; }\n\
+        .active    { color:#f00; }\n\
         #autoscroll{ display:block; margin:2px; width: 44px;\n\
                      border: 1px solid #a08070; }\n\
       </style>').appendTo('head');
@@ -146,7 +147,8 @@
     $('.pointer').click(function(e){
         e.preventDefault();
         clearInterval(autoscroll);
-        var $type = $(this).attr('title');
+        var $type =  $(this).siblings().removeClass('active').end()
+                            .addClass('active').attr('title');
         if( $type !== 'Stop'){
             var speed = parseInt($('#autoscroll').val());
             if( $type === 'Top') speed *= -1;
