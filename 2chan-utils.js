@@ -139,17 +139,29 @@
             .append($('<a/>',{text:'▲', href:/*urlSplit[0]+*/'#top','class':'pointer', title:'Top'}))
             .append($('<a/>',{text:'■', href: urlSplit[0],'class':'pointer', title:'Stop'}))
             .append($('<a/>',{text:'▼', href:/*urlSplit[0]+*/'#ufm','class':'pointer', title:'Bottom'}))
-            .append($('<input/>',{id:'autoscroll', type:'text', value:30, title: 'Delay'}))
+            .append($('<input/>',{id:'autoscroll', type:'text', value:5, title: 'Speed'}))
     ).attr('id','top');
+    //add autoscroll
+    var autoscroll = 0;
     $('.pointer').click(function(e){
         e.preventDefault();
-        var $body   = $('html, body').stop();
-        var $target = $($(this).attr('href'));
-        if($target.length){
-            $body.animate({
-                scrollTop: $target.offset().top
-            }, parseInt($('#autoscroll').val()) * 1000);
+        clearInterval(autoscroll);
+        var $type = $(this).attr('title');
+        if( $type !== 'Stop'){
+            var speed = parseInt($('#autoscroll').val());
+            if( $type === 'Top') speed *= -1;
+            var $body = $('html, body');
+            autoscroll = setInterval(function(){
+                $body.scrollTop($body.scrollTop() + speed);
+            }, 200);
         }
+        // var $body   = $('html, body').stop();
+        // var $target = $($(this).attr('href'));
+        // if($target.length){
+        //     $body.animate({
+        //         scrollTop: $target.offset().top
+        //     }, parseInt($('#autoscroll').val()) * 1000);
+        // }
     });
     //add image expanding on click
     $contentForm.find('img').click(function(e){ 
