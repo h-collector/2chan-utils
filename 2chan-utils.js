@@ -99,10 +99,12 @@
         .sidebar   { position: fixed; right: 0; width: 100px;\n\
                      padding: 5px; overflow: auto;\n\
                      border: 1px solid #a08070; }\n\
-        .stickynav { position: fixed; top: 50px; right: 10px }\n\
+        .stickynav { position: fixed; top: 50px; right: 10px; text-align:center;  }\n\
         .pointer   { background: #F0C0B0; text-decoration:none; cursor:pointer;\n\
-                     text-align:center; padding:0 2px; margin:2px; font-size:140%;\n\
-                     display:inline-block; border: 1px solid #a08070; }\n\
+                     padding:0 2px; font-size:120%;\n\
+                     display:inline-block; border:1px solid #a08070; }\n\
+        #autoscroll{ display:block; margin:2px; width: 44px;\n\
+                     border: 1px solid #a08070; }\n\
       </style>').appendTo('head');
     $('.postanchor').click(function(e){
         var target = '#'+$(this).attr('href').split(/\?|#/)[1];
@@ -114,9 +116,9 @@
     //add found links to futalog or axfc uploader to sidebar
 
     var i, count=0;
-	for (i in sidebar)
-	    if (sidebar.hasOwnProperty(i))
-	        count++;
+    for (i in sidebar)
+        if (sidebar.hasOwnProperty(i))
+            count++;
     if(count > 0 ){
         var $placeholder = $('<div/>', {'class':'sidebar'});
         $.each(sidebar, function(index, value){
@@ -134,9 +136,21 @@
     //add top/bottom sticky nav
     $('body').append(
         $('<div/>',{'class':'stickynav'})
-          .append($('<a/>',{text:'▲', href:urlSplit[0]+'#top','class':'pointer', title:'Top'}))
-          .append($('<a/>',{text:'▼', href:urlSplit[0]+'#ufm','class':'pointer', title:'Bottom'}))
+            .append($('<a/>',{text:'▲', href:/*urlSplit[0]+*/'#top','class':'pointer', title:'Top'}))
+            .append($('<a/>',{text:'■', href: urlSplit[0],'class':'pointer', title:'Stop'}))
+            .append($('<a/>',{text:'▼', href:/*urlSplit[0]+*/'#ufm','class':'pointer', title:'Bottom'}))
+            .append($('<input/>',{id:'autoscroll', type:'text', value:30, title: 'Delay'}))
     ).attr('id','top');
+    $('.pointer').click(function(e){
+        e.preventDefault();
+        var $body   = $('html, body').stop();
+        var $target = $($(this).attr('href'));
+        if($target.length){
+            $body.animate({
+                scrollTop: $target.offset().top
+            }, parseInt($('#autoscroll').val()) * 1000);
+        }
+    });
     //add image expanding on click
     $contentForm.find('img').click(function(e){ 
         e.preventDefault(); 
