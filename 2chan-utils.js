@@ -10,6 +10,29 @@
  * @author h-collector <githcoll@gmail.com>
  */
 (function($){
+    //simple counter class
+    function Counter(options){
+        this.count      = options.count      || 60;
+        this.tick       = options.count      || 60;
+        this.interval   = options.interval   || 1000;
+        this.ontick     = options.ontick     || function(){};
+        this.oncomplete = options.oncomplete || function(){};
+    };
+    Counter.prototype = {
+        id       : undefined,
+        isRunning: function(){ return this.id !== undefined },
+        stop     : function(){ this.id = clearInterval(this.id) },
+        start    : function(ticktock){
+            var self = this;
+            this.id  = setInterval(ticktock || function() {
+                self.ontick(--self.tick);
+                if (self.tick <= 0) {
+                    self.tick =     self.count;
+                    self.oncomplete(self.count)
+                }
+            }, this.interval)
+        }
+    };
     String.prototype.replaceArray = function(find, replace) {
         var replaceString = this;
         for (var i = 0; i < find.length; i++)
@@ -32,6 +55,28 @@
         });
         return this;
     };
+    //add styles
+    $('<style type="text/css">            \n\
+        .highlight { background: #F0C0B0 }\n\
+        .postanchor{ }                    \n\
+        .axfc      { background: #F0C0B0; text-decoration:none }\n\
+        .futalog   { background: #00ee00; text-decoration:none }\n\
+        .sidebar   { position: fixed; right: 0; width: 100px;\n\
+                     padding: 5px; overflow: auto;\n\
+                     border: 1px solid #a08070; }\n\
+        .sidebar a { display:block; }\n\
+        .stickynav { position: fixed; top: 50px; right: 10px; text-align:center;  }\n\
+        .pointer   { background: #F0C0B0; text-decoration:none; cursor:pointer;\n\
+                     padding:0 2px; font-size:120%;\n\
+                     display:inline-block; border:1px solid #a08070; }\n\
+        .active    { color:#f00; }\n\
+        .resizeable{ width:auto; height:auto; }\n\
+        .loading   { opacity: 0.5; }\n\
+        .fullimg   { border: 1px solid #f00; }\n\
+        .loaded    { border: 1px dashed #a08070; }\n\
+        #autoscroll{ display:block; margin:0 2px; width: 34px;\n\
+                     border: 1px solid #a08070; }\n\
+      </style>').appendTo('head');
     //futalog links
     var futalog = {
         su : 'nijibox5.com/futabafiles/tubu/src/', /* 12 */
@@ -68,150 +113,150 @@
     var axfcAlt      = $.map(axfc, function(e,i) {return i}).join('|');
     //////////////////
     var urlSplit     = location.href.split(/\?|#/);
-    var $contentForm = $('form').eq(1);
+    var sidebar      = {};
+    var $placeholder = $('<div/>', {'class':'sidebar'});
+    var $highlight   = $();
+    var addToSidebar = function(m, content){
+        if(sidebar[m]) return sidebar[m];
+           sidebar[m] = content;
+         $(sidebar[m]).appendTo($placeholder);
+        return content;
+    };
+    //process contexted form
+    $.fn.processDoc = function(url){
+        $context = $(this);
+        $context.find('#rightad').remove();
+        //add post anchor link and axfc uploader links
+        $context.searchAndReplace(
+            [
+                /No\.(\d+)/g,                                       /* post number */
+                new RegExp('(' + axfcAlt + ')_([0-9]{4,8})','g'),      /* axfc links */
+                new RegExp('(' + futaAlt + ')[0-9]{5,7}(\.[a-zA-Z0-9]{2,4})?','g') /* futalog links */
+            ],
+            [
+                '<a href="'+url[0]+'#delcheck$1" class="postanchor">$&</a>',
+                function(m, pre, num){
+                    return addToSidebar(m, '<a href="http://www1.axfc.net/uploader/'+pre+'/so/'+num+'" class="axfc">'+m+'</a>')
+                },
+                function(m, pre){
+                    return addToSidebar(m, '<a href="http://www.'+futalog[pre]+m+'" class="futalog">'+m+'</a>')
+                }
+            ]
+        );
+        //add found links to futalog or axfc uploader to sidebar
+        if($placeholder.children().length > 0){
+            //if($placeholder.parent('body').length === 0)
+            $placeholder.appendTo('body');
+            var wHeight = $(window).height();
+            var pHeight = Math.min($placeholder.height(),wHeight); 
+            $placeholder.css({
+                top :   Math.max(0, ((wHeight - pHeight) / 2) ),
+                height: pHeight
+            });
+        }
+        return $context;
+    };
     //remove ads, comment if you like them :D
     $('.chui > div, #rightad, #ufm + div, hr + b').remove();
-    //add post anchor link and axfc uploader links
-    var sidebar = {};
-    $contentForm.searchAndReplace(
-        [
-            /No\.(\d+)/g,                                       /* post number */
-            new RegExp('(' + axfcAlt + ')_([0-9]{4,8})','g'),      /* axfc links */
-            new RegExp('(' + futaAlt + ')[0-9]{5,7}(\.[a-zA-Z0-9]{2,4})?','g') /* futalog links */
-        ],
-        [
-            '<a href="'+urlSplit[0]+'#delcheck$1" class="postanchor">$&</a>',
-            function(m, pre, num){
-                return sidebar[m] = '<a href="http://www1.axfc.net/uploader/'+pre+'/so/'+num+'" class="axfc">'+m+'</a>'
-            },
-            function(m, pre){
-                return sidebar[m] = '<a href="http://www.'+futalog[pre]+m+'" class="futalog">'+m+'</a>'
-            }
-        ]
-    );
+    ///inital parse
+    $contentForm = $('form').eq(1).processDoc(urlSplit);
     //add post highlight
-    var $highlight = $();
-    $('<style type="text/css">            \n\
-        .highlight { background: #F0C0B0 }\n\
-        .postanchor{ }                    \n\
-        .axfc      { background: #F0C0B0; text-decoration:none }\n\
-        .futalog   { background: #00ee00; text-decoration:none }\n\
-        .sidebar   { position: fixed; right: 0; width: 100px;\n\
-                     padding: 5px; overflow: auto;\n\
-                     border: 1px solid #a08070; }\n\
-        .stickynav { position: fixed; top: 50px; right: 10px; text-align:center;  }\n\
-        .pointer   { background: #F0C0B0; text-decoration:none; cursor:pointer;\n\
-                     padding:0 2px; font-size:120%;\n\
-                     display:inline-block; border:1px solid #a08070; }\n\
-        .active    { color:#f00; }\n\
-        #autoscroll{ display:block; margin:2px; width: 44px;\n\
-                     border: 1px solid #a08070; }\n\
-      </style>').appendTo('head');
-    $('.postanchor').click(function(e){
+    $contentForm.on('click', '.postanchor', function(e){
         var target = '#'+$(this).attr('href').split(/\?|#/)[1];
         $highlight.removeClass('highlight');
         $highlight = $(target).closest('td').addClass('highlight');
     });
-    if(urlSplit[1])
-        $highlight = $('#'+urlSplit[1]).closest('td').addClass('highlight');
-    //add found links to futalog or axfc uploader to sidebar
-
-    var i, count=0;
-    for (i in sidebar)
-        if (sidebar.hasOwnProperty(i))
-            count++;
-    if(count > 0 ){
-        var $placeholder = $('<div/>', {'class':'sidebar'});
-        $.each(sidebar, function(index, value){
-            $(value).css({display:'block'}).appendTo($placeholder)
-        });
-        $placeholder.appendTo('body');
-        var wHeight = $(window).height();
-        var pHeight = Math.min($placeholder.height(),wHeight); 
-        $placeholder.css({
-            top :   Math.max(0, ((wHeight - pHeight) / 2) ),
-            height: pHeight
-        });
-    }
-
-    //add top/bottom sticky nav
-    $('body').append(
-        $('<div/>',{'class':'stickynav'})
-            .append($('<a/>',{text:'▲', href:/*urlSplit[0]+*/'#top','class':'pointer', title:'Top'}))
-            .append($('<a/>',{text:'■', href: urlSplit[0],'class':'pointer', title:'Stop'}))
-            .append($('<a/>',{text:'▼', href:/*urlSplit[0]+*/'#ufm','class':'pointer', title:'Bottom'}))
-            .append($('<input/>',{id:'autoscroll', type:'text', value:5, title: 'Speed'}))
-    ).attr('id','top');
-    //add autoscroll
-    var autoscroll = 0;
-    $('.pointer').click(function(e){
-        e.preventDefault();
-        clearInterval(autoscroll);
-        var $type =  $(this).siblings().removeClass('active').end()
-                            .addClass('active').attr('title');
-        if( $type !== 'Stop'){
-            var speed = parseInt($('#autoscroll').val());
-            if( $type === 'Top') speed *= -1;
-            var $body = $('html, body');
-            autoscroll = setInterval(function(){
-                $body.scrollTop($body.scrollTop() + speed);
-            }, 200);
-        }
-        // var $body   = $('html, body').stop();
-        // var $target = $($(this).attr('href'));
-        // if($target.length){
-        //     $body.animate({
-        //         scrollTop: $target.offset().top
-        //     }, parseInt($('#autoscroll').val()) * 1000);
-        // }
-    });
     //add image expanding on click
-    $contentForm.find('img').click(function(e){ 
+    $contentForm.on('click', 'img', function(e) {
         e.preventDefault(); 
-        var $img=$(this);
+        var $img = $(this);
         if(!$img.data('srcfull')){
             var href = $img.parent().attr('href');
-            $img.data({
-                   srcfull: href,
-                   srcalt : href
-                }).attr({
-                    height:'auto',
-                    width: 'auto'
+            $img.data({ srcfull: href, srcalt : href })
+                .addClass('resizeable')
+                .bind('load', function() {
+                    var $img = $(this).removeClass('loading');
+                    if (($img.attr('src') === $img.data('srcfull'))) {
+                        $img.addClass('fullimg');
+                    } else
+                        $img.removeClass('fullimg');
                 })
         }
         var src = $img.data('srcalt');
         $img.data('srcalt',$img.attr('src'))
-            .css({ opacity: 0.5 })
+            .addClass('loading')
             .attr('src', src)
-    }).bind('load', function() {
-         var $img = $(this);
-             $img.css({
-             opacity: 1,
-             border : ($img.attr('src') === $img.data('srcfull')) 
-                    ? '1px solid #f00'
-                    : '0'
-         });
     });
+    ///////////
+    if(urlSplit[1])
+        $highlight = $('#'+urlSplit[1]).closest('td').addClass('highlight');
+
+    //add inline thread expansion
+    $contentForm.find("font[color=#707070]:contains('レス')")
+        .css('cursor', 'pointer')
+        .click(function(e) {
+            var $prev = $(this).prevUntil("a:contains('返信'), small").last().prev();
+            if( $prev.tagName === 'small') return;
+            $self = $(this).next('br').remove().end();
+            $.get($prev.attr('href'), {}, function(data) {
+                $(data).filter('form')
+                        .eq(1)
+                        .find('table')
+                        .slice(0, -10)/*or untilNext($self.next())*/
+                        .processDoc([$prev.attr('href')])
+                        .replaceAll($self)
+                        .wrapAll('<div class="loaded"/>')
+            });
+        });
+    //add top/bottom sticky nav and autoscroll
+    var autoscroll = new Counter({interval:200});
+    $('body').append(
+        $('<div/>',{'class':'stickynav'})
+            .append($('<a/>',{text:'▲', href:/*urlSplit[0]+*/'#top','class':'pointer', title:'Top'}))
+            .append($('<a/>',{text:'▼', href:/*urlSplit[0]+*/'#ufm','class':'pointer', title:'Bottom'}))
+            .append($('<input/>',{id:'autoscroll', type:'text', value:$('body').height(), title: 'Speed'}))
+            .on('click', '.pointer', function(e){
+                e.preventDefault();
+                autoscroll.stop();
+
+                var $self = $(this);
+                if( $self.hasClass('active')){
+                    $self.removeClass('active');
+                    return
+                }
+                var $body = $('html, body');
+                var speed = parseInt($('#autoscroll').val());
+                var frag  = $self
+                    .siblings()
+                        .removeClass('active')
+                    .end()
+                    .addClass('active')
+                    .attr('href');
+
+                var offset, pos = $(frag).offset().top;
+                autoscroll.start(function(){
+                    if( frag === '#top') {
+                        offset = $body.scrollTop() - speed;
+                        if(offset <= pos) $self.click();
+                    } else {
+                        offset = $body.scrollTop() + speed;
+                        if(offset >= pos) $self.click();
+                    }
+                    $body.scrollTop(offset);
+                })
+            })
+        ).attr('id','top');
     //add autorefresh and counter
     var $contres = $('#contres a');
     if($contres.length){
         var cookie = "AutoRefresh=";
-        var count = 60;
-        var $timer = $('<span> '+count+' s</span>').appendTo($('#contres'));
-        var counter = {//simple counter object
-            tick     : count,
-            id       : undefined,
-            start    : function(){ this.id = setInterval(this.ticktock, 1000) },
-            stop     : function(){ this.id = clearInterval(this.id) },
-            isRunning: function(){ return this.id !== undefined },
-            ticktock : function() {
-              if (--counter.tick <= 0) {
-                 $contres.click();
-                 counter.tick = count
-              }
-              $timer.text(' ' + counter.tick + ' s')
-            }
-        };
+        var $timer = $('<span> 60s</span>').appendTo($('#contres'));
+        var counter = new Counter({
+            count     : 60,
+            interval  : 1000,
+            ontick    : function(tick){ $timer.text(' ' + tick + 's') },
+            oncomplete: function()    { $contres.click() }            
+        });
         var chBox = $('<input/>', {type:'checkbox'})
             .appendTo($('<label/>', {text:"[Auto]"}).insertBefore($timer))
             .change(function(){
