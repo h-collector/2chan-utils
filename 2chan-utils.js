@@ -47,8 +47,9 @@
         var isArray = $.isArray(pattern);
         this.contents().each(function () {
             if (this.nodeType == 3) { // Text only
-                if(isArray)  $(this).replaceWith($(this).text().replaceArray(pattern,replacement));
-                else         $(this).replaceWith($(this).text().replace(pattern,replacement));
+                var $this = $(this);
+                if(isArray)  $this.replaceWith($this.text().replaceArray(pattern,replacement));
+                else         $this.replaceWith($this.text().replace(pattern,replacement));
             } else if (this.nodeType === 1 && this.childNodes && !/(script|style)/i.test(this.tagName)){ // Child element
                 $(this).searchAndReplace(pattern, replacement);
             }
@@ -88,34 +89,19 @@
     var futaAlt = $.map(futalog, function(e,i) {return i}).join('|');
     //axfc uploader links
     var axfc = {//didn't use full names but
-        Sc: "Scandium",
-        He: "Helium",
-        Ne: "Neon",
-        H:  "Hydrogen",
-        Li: "Lithium",
-        N:  "Nitrogen",
-        Si: "Silicon",
-        C:  "Carbon",
-        O:  "Oxygen",
-        Al: "Aluminium",
-        S:  "Sulphur",
-        P:  "Phosphorus",
-        Ar: "Argon",
-        B:  "Boron",
-        K:  "Potassium",
-        F:  "Fluorine",
-        Be: "Beryllium",
-        Na: "Sodium",
-        Ca: "Calcium",
-        Mg: "Magnesium",
+        Sc: "Scandium",  He: "Helium",    Ne: "Neon",      H:  "Hydrogen",
+        Li: "Lithium",   N:  "Nitrogen",  Si: "Silicon",   C:  "Carbon",
+        O:  "Oxygen",    Al: "Aluminium", S:  "Sulphur",   P:  "Phosphorus",
+        Ar: "Argon",     B:  "Boron",     K:  "Potassium", F:  "Fluorine",
+        Be: "Beryllium", Na: "Sodium",    Ca: "Calcium",   Mg: "Magnesium",
         Cl: "Chlorine"
     };
     var axfcAlt      = $.map(axfc, function(e,i) {return i}).join('|');
     //////////////////
     var urlSplit     = location.href.split(/\?|#/);
-    var sidebar      = {};
     var $placeholder = $('<div/>', {'class':'sidebar'});
     var $highlight   = $();
+    var sidebar      = {};
     var addToSidebar = function(m, content){
         if(sidebar[m]) return sidebar[m];
            sidebar[m] = content;
@@ -134,7 +120,7 @@
                 new RegExp('(' + futaAlt + ')[0-9]{5,7}(\.[a-zA-Z0-9]{2,4})?','g') /* futalog links */
             ],
             [
-                '<a href="'+url[0]+'#delcheck$1" class="postanchor">$&</a>',
+                '<a href="'+url+'#delcheck$1" class="postanchor">$&</a>',
                 function(m, pre, num){
                     return addToSidebar(m, '<a href="http://www1.axfc.net/uploader/'+pre+'/so/'+num+'" class="axfc">'+m+'</a>')
                 },
@@ -159,7 +145,7 @@
     //remove ads, comment if you like them :D
     $('.chui > div, #rightad, #ufm + div, hr + b').remove();
     ///inital parse
-    $contentForm = $('form').eq(1).processDoc(urlSplit);
+    $contentForm = $('form').eq(1).processDoc(urlSplit[0]);
     //add post highlight
     $contentForm.on('click', '.postanchor', function(e){
         var target = '#'+$(this).attr('href').split(/\?|#/)[1];
@@ -203,8 +189,8 @@
                         .eq(1)
                         .find('table')
                         .slice(0, -10)/*or untilNext($self.next())*/
-                        .processDoc([$prev.attr('href')])
-                        .replaceAll($self)
+                        .processDoc($prev.attr('href'))
+                        .replaceAll($self)//$self.nextUntil('hr').andSelf()
                         .wrapAll('<div class="loaded"/>')
             });
         });
