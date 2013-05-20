@@ -1,6 +1,8 @@
 /**
  * Script for 2chan.net futaba board adding:
  * - inline image expansion, 
+ * - inline thread expansion,
+ * - expose mailto hidden messages
  * - single post anchoring and post highlight , 
  * - futalog and axfc uploader autolinking with highlight and unique links in sidebar 
  * - page autorefresh on new content, 
@@ -8,6 +10,7 @@
  * To use with Opera Scripter extension .
  * 
  * @author h-collector <githcoll@gmail.com>
+ * @require jQuery > 1.4
  */
 (function($){
     //simple counter class
@@ -75,6 +78,7 @@
         .loading   { opacity: 0.5; }\n\
         .fullimg   { border: 1px solid #f00; }\n\
         .loaded    { border: 1px dashed #a08070; }\n\
+        .secret    { border: 1px dashed #a08070; }\n\
         #autoscroll{ display:block; margin:0 2px; width: 34px;\n\
                      border: 1px solid #a08070; }\n\
       </style>').appendTo('head');
@@ -112,6 +116,16 @@
     $.fn.processDoc = function(url){
         $context = $(this);
         $context.find('#rightad').remove();
+        //expose mailto hidden messages
+        var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+        $context.find('a[href^=mailto]').each(function(){
+        	var $this=$(this);
+        	var text = $this.attr('href').substr(7);
+        	//don't expose sage or valid emails (don't need them)
+        	if(text === 'sage' || emailReg.test(text))
+        		return true;
+        	$this.after($('<span/>',{html: text, 'class':'secret'}))
+        });
         //add post anchor link and axfc uploader links
         $context.searchAndReplace(
             [
