@@ -7,7 +7,9 @@
 // @include     http://yakumo-family.com/fdat/*
 // @require     //ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
 // @homepageURL https://gist.github.com/h-collector/5471519#file-2chan-utils-js
-// @version     1.0
+// @history     1.0.1 partially fix sideeffect of reverse node traversal on sidebar
+// @history     1.0   initial release
+// @version     1.0.1
 // @date        2013-05-24
 // @license     GPL
 // ==/UserScript==
@@ -102,10 +104,10 @@
                     var len = tempHolder.childNodes.length;
                     if (len > 1){
                         while (len--)
-                           parent.insertBefore(tempHolder.firstChild, node);
+                           parent.insertBefore(tempHolder.lastChild, node);
                         parent.removeChild(node);
                     } else {
-                        parent.replaceChild(tempHolder.firstChild, node);
+                        parent.replaceChild(tempHolder.lastChild, node);
                     }
                 } else if (node.nodeType === 1 && node.childNodes && !/(script|style)/i.test(node.tagName)) {
                     for (var i = node.childNodes.length - 1; i >= 0; --i)
@@ -178,7 +180,7 @@
         var addToSidebar = function(m, content){
             if (sidebar[m]) return sidebar[m];
                 sidebar[m] = content;
-                $('<li>'+sidebar[m]+'</li>').appendTo($placeholder);
+                $('<li>'+sidebar[m]+'</li>').prependTo($placeholder);
             return content;
         };
         //process contexted form
