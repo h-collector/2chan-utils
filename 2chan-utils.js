@@ -2,31 +2,27 @@
 // @author      h-collector <githcoll@gmail.com>
 // @name        2chan-utils
 // @namespace   https://gist.github.com/h-collector/
-// @description Script for 2chan.net futaba board adding:
+// @description Script for 2chan.net futaba board adding
+//              - inline image expansion, 
+//              - inline thread expansion,
+//              - expose mailto hidden messages
+//              - single post anchoring and post highlight , 
+//              - futalog and axfc uploader autolinking with highlight and unique links in sidebar 
+//              - page autorefresh on new content, 
+//              - removing ads. 
+//              To use with eg. opera scripter (tested), or using converter to oex on opera (tested)
+//              Should be used in domready event, didn't really try on greasemonkey but should work
 // @include     http://*.2chan.net/*
 // @include     http://yakumo-family.com/fdat/*
 // @require     //ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
 // @homepageURL https://gist.github.com/h-collector/5471519#file-2chan-utils-js
+// @history     1.0.2 fixed and improved sidebar, added goto link, fixed autoscroll
 // @history     1.0.1 partially fix sideeffect of reverse node traversal on sidebar
 // @history     1.0   initial release
-// @version     1.0.1
-// @date        2013-05-24
+// @version     1.0.2
+// @date        2013-05-25
 // @license     GPL
 // ==/UserScript==
-
-/**
- *    Features: 
- *    - inline image expansion, 
- *    - inline thread expansion,
- *    - expose mailto hidden messages
- *    - single post anchoring and post highlight , 
- *    - futalog and axfc uploader autolinking with highlight and unique links in sidebar 
- *    - page autorefresh on new content, 
- *    - removing ads. 
- *    To use with eg. opera scripter (tested), or using converter to oex on opera (tested)
- *    Should be used in domready event
- *    Didn't really try on greasemonkey
- */
 
 (function(){
     if (window.document.readyState == 'complete'){
@@ -36,6 +32,13 @@
     }
 
     function init(){
+        //just because
+        if (!("console" in window)) {
+            var names = ["log", "error", "time", "timeEnd"];
+            window.console = {};
+            for (var i = 0, len = names.length; i < len; ++i)
+                window.console[names[i]] = function(){}
+        }
         // Add jQuery if not avalible
         if (typeof window.jQuery == 'undefined') {
             var head   = document.getElementsByTagName('head')[0] || document.documentElement,
@@ -47,41 +50,57 @@
                 run(window.jQuery)
             };
             head.appendChild(script);
-            //head.insertBefore(script, head.firstChild);
         } else {
            run(window.jQuery)
         }
     }
+    //simple counter class
+    function Counter(options){
+        this.count      = options.count      || 60;
+        this.tick       = options.count      || 60;
+        this.interval   = options.interval   || 1000;
+        this.ontick     = options.ontick     || function(){};
+        this.oncomplete = options.oncomplete || function(){};
+    }
+    Counter.prototype = {
+        id       : undefined,
+        isRunning: function(){ return this.id !== undefined },
+        stop     : function(){ this.id = clearInterval(this.id) },
+        start    : function(ticktock){
+            var self = this;
+            this.id  = setInterval(ticktock || function() {
+                self.ontick(--self.tick);
+                if (self.tick <= 0) {
+                    self.tick =     self.count;
+                    self.oncomplete(self.count)
+                }
+            }, this.interval)
+        }
+    }
     function run($){
-        var debug = false;
-        //simple counter class
-        function Counter(options){
-            this.count      = options.count      || 60;
-            this.tick       = options.count      || 60;
-            this.interval   = options.interval   || 1000;
-            this.ontick     = options.ontick     || function(){};
-            this.oncomplete = options.oncomplete || function(){};
-        };
-        Counter.prototype = {
-            id       : undefined,
-            isRunning: function(){ return this.id !== undefined },
-            stop     : function(){ this.id = clearInterval(this.id) },
-            start    : function(ticktock){
-                var self = this;
-                this.id  = setInterval(ticktock || function() {
-                    self.ontick(--self.tick);
-                    if (self.tick <= 0) {
-                        self.tick =     self.count;
-                        self.oncomplete(self.count)
-                    }
-                }, this.interval)
-            }
-        };
+        var timeit = true;
+        timeit && console.time("2chan-utils");
+        //highlighter
+        $.fn.highlight = function () {
+            return $(this).each(function () {
+                var $el = $(this);
+                $("<div/>", {'class': 'highlight'})
+                    .width( $el.outerWidth())
+                    .height($el.outerHeight())
+                    .css({
+                        left: $el.offset().left,
+                        top:  $el.offset().top
+                    })
+                    .appendTo('body')
+                    .fadeOut(1000)
+                    .queue(function () { $(this).remove() })
+            })
+        }
         String.prototype.replaceArray = function(find, replace) {
             var replaceString = this;
             for (var i = 0, len = find.length; i < len; i++)
                 replaceString = replaceString.replace(find[i], replace[i]);
-            return replaceString;
+            return replaceString
         };
         //search and replace text content
         $.fn.searchAndReplace = function(pattern, replacement) {
@@ -104,10 +123,10 @@
                     var len = tempHolder.childNodes.length;
                     if (len > 1){
                         while (len--)
-                           parent.insertBefore(tempHolder.lastChild, node);
+                           parent.insertBefore(tempHolder.firstChild, node);
                         parent.removeChild(node);
                     } else {
-                        parent.replaceChild(tempHolder.lastChild, node);
+                        parent.replaceChild(tempHolder.firstChild, node);
                     }
                 } else if (node.nodeType === 1 && node.childNodes && !/(script|style)/i.test(node.tagName)) {
                     for (var i = node.childNodes.length - 1; i >= 0; --i)
@@ -120,18 +139,26 @@
         };
         //add styles
         $('<style type="text/css">\n\
-            .highlight { background: #F0C0B0; }\
-            .postanchor{ margin: 0 2px; }\
-            .axfc      { background: #F0C0B0; text-decoration:none; }\
-            .futalog   { background: #00ee00; text-decoration:none; }\
-            #sidebar   { position: fixed; right: 0; \
-                         padding: 5px; overflow: auto; \
-                         border: 1px solid #a08070; }\
+            td.highlight { background: #eba; }\
+            div.highlight{ background: #ff9; position: absolute; opacity: 0.7; z-index: 1000; }\
+            a.postanchor{ margin: 0 2px; }\
+            a.axfc      { background: #eba; }\
+            a.futalog   { background: #0e0; }\
+            a.axfc, \
+            a.futalog,\
+            #sidebar a  { display:inline; display:inline-block; padding: 0 4px; \
+                          text-decoration:none; border-radius:4px;}\
+            #sidebar    { padding: 4px; position: fixed; right: 0; \
+                          overflow: auto; \
+                          border: 1px solid #a08070; }\
             #sidebar div{ text-align:center; font-weight:bold; }\
             #sidebar ul { padding:0; margin:0; text-align:left; }\
-            #sidebar li { padding:0; margin:0; }\
-            #sidebar a { display:block; }\
-            #stickynav { background: #F0e0c0; text-align:center; \
+            #sidebar li { padding:0; margin:0; padding-left: 20px; cursor:pointer;\
+                        background: url(data:image/gif;base64,R0lGODlhEgASAKEAAP///59AO4AAAP//+iH5BAEAAAAALAAAAAASABIAAAI0hI+pyycP40si2IutQDX77XgfJ2ag0ZUaObTuG5xA9dZDTKprqOO8Lkupgj2fQ4JsKJeNAgA7) center left no-repeat; }\
+            #sidebar a { display:block; height: 22px;}\
+            #sidebar li:hover a,\
+                     a.highlight { background: #ff0;}\
+            #stickynav { background: #eba; text-align:center; \
                          position: fixed; top: 50px; right: 10px; }\
             .pointer   { background: #a00; padding:1px; margin:1px; cursor:pointer; \
                          display:inline-block; width:14px; height:14px; \
@@ -141,9 +168,8 @@
             .resizeable{ width:auto; height:auto; }\
             .loading   { opacity: 0.5; }\
             .overlay-parent { position: relative; display:block; float:left; }\
-            .overlay   { position:absolute; left:20px; z-index:1000; \
-                         opacity: 0.5;\
-                         background: #00f url(data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wCRHZnFVdmgHu2nFwlWCI3WGc3TSWhUFGxTAUkGCbtgENBMJAEJsxgMLWzpEAACH5BAkKAAAALAAAAAAQABAAAAMyCLrc/jDKSatlQtScKdceCAjDII7HcQ4EMTCpyrCuUBjCYRgHVtqlAiB1YhiCnlsRkAAAOwAAAAAAAAAAAA==) center center no-repeat;}\
+            .overlay   { position:absolute; z-index:1000; left:20px; opacity: 0.5;\
+                         background: #00f url(data:image/gif;base64,R0lGODlhKwALAPEAAP///wAAAIKCggAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAKwALAAACMoSOCMuW2diD88UKG95W88uF4DaGWFmhZid93pq+pwxnLUnXh8ou+sSz+T64oCAyTBUAACH5BAkKAAAALAAAAAArAAsAAAI9xI4IyyAPYWOxmoTHrHzzmGHe94xkmJifyqFKQ0pwLLgHa82xrekkDrIBZRQab1jyfY7KTtPimixiUsevAAAh+QQJCgAAACwAAAAAKwALAAACPYSOCMswD2FjqZpqW9xv4g8KE7d54XmMpNSgqLoOpgvC60xjNonnyc7p+VKamKw1zDCMR8rp8pksYlKorgAAIfkECQoAAAAsAAAAACsACwAAAkCEjgjLltnYmJS6Bxt+sfq5ZUyoNJ9HHlEqdCfFrqn7DrE2m7Wdj/2y45FkQ13t5itKdshFExC8YCLOEBX6AhQAADsAAAAAAAAAAAA=) center center no-repeat;}\
             .fullimg   { border: 1px solid #f00; }\
             .loaded    { border: 1px dashed #a08070; }\
             .secret    { border: 1px dashed #a08070; }\
@@ -157,7 +183,7 @@
             ss : 'nijibox5.com/futabafiles/kobin/src/',/* 24 */
             sq : 'nijibox6.com/futabafiles/mid/src/auth.redirect.php?',  /* 48 key */
             sp : 'nijibox2.com/futabafiles/003/src/'   /* 60 */
-        };//$.map(futalog, function(e,i) {return i}).join('|');
+        };
         var futaAlt = 's[uaspq]';
         //axfc uploader links
         var axfc = {//didn't use full names but
@@ -167,24 +193,31 @@
             Ar: "Argon",     B:  "Boron",     K:  "Potassium", F:  "Fluorine",
             Be: "Beryllium", Na: "Sodium",    Ca: "Calcium",   Mg: "Magnesium",
             Cl: "Chlorine"
-        };//$.map(axfc, function(e,i) {return i}).sort().reverse().join('|');
-        //var axfcAlt      = 'Si|Sc|S|P|O|Ne|Na|N|Mg|Li|K|He|H|F|Cl|Ca|C|Be|B|Ar|Al';
-        //var axfcAlt      = 'S[ic]?|P|O|N[ea]?|Mg|Li|K|He?|F|C[la]?|Be?|A[rl]';
-        //var axfcAlt      = 'S[ic]?|[POKF]|N[ea]?|Mg|Li|[HB]e?|C[la]?|A[rl]';
+        };
         var axfcAlt      = '[FKOP]|C[al]?|N[ae]?|S[ci]?|A[lr]|Be?|He?|Li|Mg';
         //////////////////
-        var basehref     = location.href.split('#')[0];//(/\?|#/)[0]
+        var aId          = 0;
+        var basehref     = location.href.split('#')[0];
         var $placeholder = $('<ul/>');
         var $highlight   = $();
         var sidebar      = {};
-        var addToSidebar = function(m, content){
-            if (sidebar[m]) return sidebar[m];
-                sidebar[m] = content;
-                $('<li>'+sidebar[m]+'</li>').prependTo($placeholder);
-            return content;
+        var addToSidebar = function(m, aId, attributes){
+            if(sidebar[m]){
+                $('#'+m, $placeholder).detach()
+                    .prependTo($placeholder)
+                    .data('anchorId').push(aId)
+            } else{
+                sidebar[m] = true;
+                //var id = m.replace('.','')
+                $('<li id="'+m+'"><a'+attributes+'>'+m+'</a></li>')
+                    .prependTo($placeholder)
+                    .data('anchorId',[aId])
+            }
+            return attributes;
         };
         //process contexted form
         $.fn.processDoc = function(url){
+            timeit && console.time("processing: " + url);
             $context = $(this);
             $context.css({display: 'none'});
             $context.find('#rightad').remove();
@@ -208,22 +241,25 @@
             try {
                 $context.searchAndReplace(
                     [
-                        /\bNo\.(\d+)\b/g,                                       /* post number */
-                        new RegExp("(" + axfcAlt + ")_([0-9]{4,8})",'g'),      /* axfc links */
-                        new RegExp("(" + futaAlt + ")[0-9]{5,7}(\.[a-zA-Z0-9]{2,4})?",'g') /* futalog links */
+                        /\bNo\.(\d+)\b/g,                                 /* post number */
+                        new RegExp("(" + axfcAlt + ")_([0-9]{4,8})",'g'), /* axfc links */
+                        new RegExp("(" + futaAlt + ")[0-9]{5,7}",'g')     /* futalog links */
                     ],
                     [
                         '<a href="'+url+'#delcheck$1" class="postanchor">$&</a>',
                         function(m, pre, num){
-                            return addToSidebar(m, '<a href="http://www1.axfc.net/uploader/'+pre+'/so/'+num+'" class="axfc">'+m+'</a>')
+                            return '<a id="a'+(++aId)+'"' 
+                                + addToSidebar(m, aId, ' href="http://www1.axfc.net/uploader/'+pre+'/so/'+num+'" class="axfc"') 
+                                + '>'+m+'</a>'
                         },
                         function(m, pre){
-                            return addToSidebar(m, '<a href="http://www.'+futalog[pre]+m+'" class="futalog">'+m+'</a>')
+                            return '<a id="a'+(++aId)+'"' 
+                                + addToSidebar(m, aId, ' href="http://www.'+futalog[pre]+m+'" class="futalog"') 
+                                + '>'+m+'</a>'
                         }
                     ]
                 );
             } catch(err){
-                if(debug) throw err;
                 console.error(err.stack); 
                 txt="There was an error in script.\n\n";
                 txt+="Error description: " + err.message + "\n\n";
@@ -245,11 +281,38 @@
             if($placeholder.children().length > 0){
                 //if($placeholder.parent('body').length === 0)
                 var $sidebar = $('#sidebar');
-                if( $sidebar.length === 0)
+                if( $sidebar.length === 0){
                     $sidebar = $('<div/>', {id:'sidebar'})
                         .append($('<div/>', {text:'Downloads'}))
                         .append($placeholder)
                         .appendTo('body');
+                    //add links highlight
+                    $placeholder
+                        .on('mouseenter','li',function(){
+                            $.each($(this).data('anchorId'), function(idx, val){
+                                $('#a'+val).addClass('highlight')
+                            })
+                        })
+                        .on('mouseleave','li',function(){
+                            $.each($(this).data('anchorId'), function(idx, val){
+                                $('#a'+val).removeClass('highlight')
+                            })
+                        })
+                        .on('click','a',function(event){
+                            event.stopPropagation();
+                        })
+                        .on('click','li',function(){
+                            $('html, body').scrollTop(
+                                $('#a'+ $(this)
+                                    .data('anchorId')
+                                    .slice(-1)[0]
+                                )
+                                .closest('td')
+                                .highlight()
+                                .offset().top
+                            );
+                        });
+                }
                 var hHeight = $placeholder.prev().height();
                 var wHeight = $(window).height();
                 var pHeight = Math.min($placeholder.height() + hHeight,wHeight); 
@@ -258,6 +321,7 @@
                     height: pHeight 
                 });
             }
+            timeit && console.timeEnd("processing: " + url);
             return $context;
         };
         //remove ads, comment if you like them :D
@@ -267,15 +331,20 @@
         $('hr').next('b').remove();
         ///inital parse
         $contentForm = $('form').eq(1);
-        if( $contentForm.length === 0)
-            $contentForm = $('body');//for yakumo-family.com
+        if( $contentForm.length === 0){//for yakumo-family.com
+            $contentForm = $('body').wrapInner($('<div/>')).first();
+            //$contentForm = $('body');
+        }
         $contentForm.processDoc(basehref);
         //add post highlight
         $contentForm.on('click', 'a.postanchor', function(e){
-            //var target = '#'+$(this).attr('href').split('#')[1];
             $highlight.removeClass('highlight');
             $highlight = $(this.hash).closest('td').addClass('highlight');
         });
+        ///////////
+        if(location.hash)//don't need to fire click
+            $highlight = $(location.hash).closest('td').addClass('highlight');
+
         //add image expanding on click
         $contentForm.on('click', 'img', function(e) {
             e.preventDefault(); 
@@ -285,33 +354,29 @@
                 $img.data({ srcfull: href, srcalt : href })
                     .addClass('resizeable')
                     .bind('load', function() {
-                        var $img = $(this);/*.removeClass('loading');*/
-                        $img.prev('.overlay').remove();
+                        var $img = $(this);
+                        $img.prev('div.overlay').remove();
                         if (($img.attr('src') === $img.data('srcfull'))) {
                             $img.addClass('fullimg');
                         } else
                             $img.removeClass('fullimg');
                     })
-                    .before($('<div/>',{
-                        'class': 'overlay',
-                        width:   $img.width(),
-                        height:  $img.height()
-                    }).hide())
+                    .before($('<div/>',{'class': 'overlay'})
+                            .width( $img.outerWidth())
+                            .height($img.outerHeight())
+                            /*.css({left:$img.offset().left})*/
+                            .hide()
+                    )
                     .parent()
                         .addClass('overlay-parent');
 
             }
             var src = $img.data('srcalt');
             $img.data('srcalt',$img.attr('src'))
-                //.addClass('loading')
                 .attr('src', src)
-                .prev('.overlay')
+                .prev('div.overlay')
                     .show()
         });
-        ///////////
-        if(location.hash)
-            $highlight = $(location.hash).closest('td').addClass('highlight');
-
         //add inline thread expansion
         $contentForm.find("font").filter("[color=#707070]").filter(":contains('レス')")
             .css('cursor', 'pointer')
@@ -327,12 +392,13 @@
                             .processDoc(prev.href)
                             .replaceAll($self)//$self.nextUntil('hr').andSelf()
                             .wrapAll('<div class="loaded"/>')
-                });
+                })
             });
         //add top/bottom sticky nav and autoscroll
         var autoscroll = new Counter({interval:200});
         $('body')
             .attr('id','top')
+            .append($('<div/>',{id:'btm'}))
             .append($('<div/>',{id:'stickynav'})
                 .append($('<a/>',{text:'⬆'/*▲*/, href:basehref+'#top','class':'pointer', title:'Top'}))
                 .append($('<a/>',{text:'⬇'/*▼*/, href:basehref+'#btm','class':'pointer', title:'Bottom'}))
@@ -346,28 +412,25 @@
                         $self.removeClass('active');
                         return
                     }
-                    var $body = $('html, body');
-                    var speed = parseInt($('#autoscroll').val());
                     var hash  = $self
                         .siblings()
                             .removeClass('active')
                         .end()
                         .addClass('active')
-                        .get(0).hash//.attr('href');
-
-                    var offset, pos = $(hash).offset().top;
+                        .get(0).hash,
+                        speed = parseInt($('#autoscroll').val()),
+                        $body = $('html, body'),
+                        offset, lastOffset;
+                    if( hash === '#top')
+                        speed *= -1;
                     autoscroll.start(function(){
-                        if( hash === '#top') {
-                            offset = $body.scrollTop() - speed;
-                            if(offset <= pos) $self.click();
-                        } else {
-                            offset = $body.scrollTop() + speed;
-                            if(offset >= pos) $self.click();
-                        }
-                        $body.scrollTop(offset);
+                        offset = $body.scrollTop() + speed;
+                        if(offset === lastOffset)
+                            return $self.click();
+                        $body.scrollTop(lastOffset = offset);
                     })
                 })
-            ).append($('<div/>',{id:'btm'}));
+            );
         //add autorefresh and counter
         var $contres = $('#contres a');
         if( $contres.length){
@@ -401,5 +464,6 @@
                 }
             }
         }
-    };
+        timeit && console.timeEnd("2chan-utils");
+    }
 })();
