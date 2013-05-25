@@ -20,7 +20,7 @@
 // @history     1.0.2 fixed and improved sidebar, added goto link, fixed autoscroll
 // @history     1.0.1 partially fix sideeffect of reverse node traversal on sidebar
 // @history     1.0   initial release
-// @version     1.0.2
+// @version     1.0.3
 // @date        2013-05-26
 // @license     GPL
 // ==/UserScript==
