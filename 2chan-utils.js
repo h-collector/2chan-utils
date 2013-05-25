@@ -3,24 +3,25 @@
 // @name        2chan-utils
 // @namespace   https://gist.github.com/h-collector/
 // @description Script for 2chan.net futaba board adding
-//              - inline image expansion, 
-//              - inline thread expansion,
-//              - expose mailto hidden messages
-//              - single post anchoring and post highlight , 
-//              - futalog and axfc uploader autolinking with highlight and unique links in sidebar 
-//              - page autorefresh on new content, 
-//              - removing ads. 
-//              To use with eg. opera scripter (tested), or using converter to oex on opera (tested)
-//              Should be used in domready event, didn't really try on greasemonkey but should work
+// @description - inline image expansion, 
+// @description - inline thread expansion,
+// @description - expose mailto hidden messages
+// @description - single post anchoring and post highlight , 
+// @description - futalog and axfc uploader autolinking with highlight and unique links in sidebar 
+// @description - page autorefresh on new content, 
+// @description - removing ads. 
+// @description To use with eg. opera scripter (tested), or using converter to oex on opera (tested)
+// @description Should be used in domready event, didn't really try on greasemonkey but should work
 // @include     http://*.2chan.net/*
 // @include     http://yakumo-family.com/fdat/*
 // @require     //ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
 // @homepageURL https://gist.github.com/h-collector/5471519#file-2chan-utils-js
+// @history     1.0.3 minor changes
 // @history     1.0.2 fixed and improved sidebar, added goto link, fixed autoscroll
 // @history     1.0.1 partially fix sideeffect of reverse node traversal on sidebar
 // @history     1.0   initial release
 // @version     1.0.2
-// @date        2013-05-25
+// @date        2013-05-26
 // @license     GPL
 // ==/UserScript==
 
@@ -54,32 +55,32 @@
            run(window.jQuery)
         }
     }
-    //simple counter class
-    function Counter(options){
-        this.count      = options.count      || 60;
-        this.tick       = options.count      || 60;
-        this.interval   = options.interval   || 1000;
-        this.ontick     = options.ontick     || function(){};
-        this.oncomplete = options.oncomplete || function(){};
-    }
-    Counter.prototype = {
-        id       : undefined,
-        isRunning: function(){ return this.id !== undefined },
-        stop     : function(){ this.id = clearInterval(this.id) },
-        start    : function(ticktock){
-            var self = this;
-            this.id  = setInterval(ticktock || function() {
-                self.ontick(--self.tick);
-                if (self.tick <= 0) {
-                    self.tick =     self.count;
-                    self.oncomplete(self.count)
-                }
-            }, this.interval)
-        }
-    }
     function run($){
         var timeit = true;
         timeit && console.time("2chan-utils");
+        //simple counter class
+        function Counter(options){
+            this.count      = options.count      || 60;
+            this.tick       = options.count      || 60;
+            this.interval   = options.interval   || 1000;
+            this.ontick     = options.ontick     || function(){};
+            this.oncomplete = options.oncomplete || function(){};
+        }
+        Counter.prototype = {
+            id       : undefined,
+            isRunning: function(){ return this.id !== undefined },
+            stop     : function(){ this.id = clearInterval(this.id) },
+            start    : function(ticktock){
+                var self = this;
+                this.id  = setInterval(ticktock || function() {
+                    self.ontick(--self.tick);
+                    if (self.tick <= 0) {
+                        self.tick =     self.count;
+                        self.oncomplete(self.count)
+                    }
+                }, this.interval)
+            }
+        }
         //highlighter
         $.fn.highlight = function () {
             return $(this).each(function () {
@@ -203,12 +204,12 @@
         var sidebar      = {};
         var addToSidebar = function(m, aId, attributes){
             if(sidebar[m]){
-                $('#'+m, $placeholder).detach()
-                    .prependTo($placeholder)
-                    .data('anchorId').push(aId)
-            } else{
+                var $li = $('#'+m, $placeholder);
+                if( $li !== $placeholder.first())
+                    $li.prependTo($placeholder);
+                $li.data('anchorId').push(aId)
+            } else{//var id = m.replace('.','')
                 sidebar[m] = true;
-                //var id = m.replace('.','')
                 $('<li id="'+m+'"><a'+attributes+'>'+m+'</a></li>')
                     .prependTo($placeholder)
                     .data('anchorId',[aId])
@@ -331,10 +332,8 @@
         $('hr').next('b').remove();
         ///inital parse
         $contentForm = $('form').eq(1);
-        if( $contentForm.length === 0){//for yakumo-family.com
-            $contentForm = $('body').wrapInner($('<div/>')).first();
-            //$contentForm = $('body');
-        }
+        if( $contentForm.length === 0)//for yakumo-family.com
+            $contentForm = $('body');/*.wrapInner($('<div/>')).first();*/
         $contentForm.processDoc(basehref);
         //add post highlight
         $contentForm.on('click', 'a.postanchor', function(e){
