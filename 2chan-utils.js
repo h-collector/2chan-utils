@@ -2,17 +2,22 @@
 // @author      h-collector <githcoll@gmail.com>
 // @name        2chan-utils
 // @namespace   https://gist.github.com/h-collector/
-// @description Script for 2chan.net futaba board
+// @description Script for 2chan.net futaba board and archieved threads on yakumo-family.com adding useful functions
 // @include     http://*.2chan.net/*
+// @exclude     http://*.2chan.net/*/src/*
 // @include     http://yakumo-family.com/fdat/*
-// @require     //ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
+// @include     http://yakumo-family.com/f*dat/*
+// @include     http://www.yakumo-family.com/fdat/*
+// @include     http://www.yakumo-family.com/f*dat/*
+// @require     https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
 // @homepageURL https://gist.github.com/h-collector/5471519#file-2chan-utils-js
-// @history     1.0.4 fix clicking on image while loading open link, a little code reformat, added more icons
+// @history     1.0.5 fix: userjs @include/exclude/require declarations (overlay on image page, no www on yakumo-family)
+// @history     1.0.4 fix: clicking on image while loading open link, a little code reformat, added more icons
 // @history     1.0.3 minor changes
 // @history     1.0.2 fixed and improved sidebar, added goto link, fixed autoscroll
 // @history     1.0.1 partially fix sideeffect of reverse node traversal on sidebar
 // @history     1.0   initial release
-// @version     1.0.4
+// @version     1.0.5
 // @date        2013-05-26
 // @license     GPL
 // ==/UserScript==
@@ -61,6 +66,7 @@
     function run($){
         var timeit = true;
         timeit && console.time("2chan-utils");
+        console.log('jQuery version: ' + $().jquery);
         //simple counter class
         function Counter(options){
             this.count      = options.count      || 60;
