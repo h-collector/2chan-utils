@@ -2,28 +2,31 @@
 // @author      h-collector <githcoll@gmail.com>
 // @name        2chan-utils
 // @namespace   https://gist.github.com/h-collector/
-// @description Script for 2chan.net futaba board adding
-// @description - inline image expansion, 
-// @description - inline thread expansion,
-// @description - expose mailto hidden messages
-// @description - single post anchoring and post highlight , 
-// @description - futalog and axfc uploader autolinking with highlight and unique links in sidebar 
-// @description - page autorefresh on new content, 
-// @description - removing ads. 
-// @description To use with eg. opera scripter (tested), or using converter to oex on opera (tested)
-// @description Should be used in domready event, didn't really try on greasemonkey but should work
+// @description Script for 2chan.net futaba board
 // @include     http://*.2chan.net/*
 // @include     http://yakumo-family.com/fdat/*
 // @require     //ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
 // @homepageURL https://gist.github.com/h-collector/5471519#file-2chan-utils-js
+// @history     1.0.4 fix clicking on image while loading open link, a little code reformat, added more icons
 // @history     1.0.3 minor changes
 // @history     1.0.2 fixed and improved sidebar, added goto link, fixed autoscroll
 // @history     1.0.1 partially fix sideeffect of reverse node traversal on sidebar
 // @history     1.0   initial release
-// @version     1.0.3
+// @version     1.0.4
 // @date        2013-05-26
 // @license     GPL
 // ==/UserScript==
+
+//  Features:
+//  - inline image expansion, 
+//  - inline thread expansion,
+//  - expose mailto hidden messages
+//  - single post anchoring and post highlight , 
+//  - futalog and axfc uploader autolinking with highlight and unique links in sidebar 
+//  - page autorefresh on new content, 
+// - removing ads. 
+//  To use with eg. opera scripter (tested), or using converter to oex on opera (tested)
+//  Should be used in domready event, didn't really try on greasemonkey but should work
 
 (function(){
     if (window.document.readyState == 'complete'){
@@ -33,7 +36,7 @@
     }
 
     function init(){
-        //just because
+        //just in odd case
         if (!("console" in window)) {
             var names = ["log", "error", "time", "timeEnd"];
             window.console = {};
@@ -82,10 +85,10 @@
             }
         }
         //highlighter
-        $.fn.highlight = function () {
+        $.fn.highlight = function() {
             return $(this).each(function () {
                 var $el = $(this);
-                $("<div/>", {'class': 'highlight'})
+                $('<div/>', {'class': 'highlight'})
                     .width( $el.outerWidth())
                     .height($el.outerHeight())
                     .css({
@@ -108,8 +111,8 @@
             if (this.length === 0 || !pattern || !replacement) 
                 return this;
 
-            var isArray    = $.isArray(pattern);
-            var tempHolder = document.createElement('span');
+            var isArray    = $.isArray(pattern),
+                tempHolder = document.createElement('span');
             var innerSearchAndReplace = function(node, pattern, replacement) {
                 if (node.nodeType === 3) {
                     var parent  = node.parentNode,
@@ -138,45 +141,53 @@
                 innerSearchAndReplace(this, pattern, replacement);
             });
         };
+
         //add styles
         $('<style type="text/css">\n\
+            hr           { clear:both;}\
+            .expand      { background: url(data:image/gif;base64,R0lGODlhEgASAKEAAAQCBPz+/IQCBJxCPCH5BAEAAAAALAAAAAASABIAAAI7hI+pyycP40ti2IutQBWHkG1O9oUcCWKi0V2len7yDK5ARdOD3VrvxUOZRp4U8FQcsjLMHUUCbUinjQIAOw==) center left no-repeat; }\
+            .expanding   { background: url(data:image/gif;base64,R0lGODlhEgASAJEDAJ9AO4AAAP//+v///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgADACwAAAAAEgASAAACO5yPqcsXD+NLAdiLbUAVC5FtTvaFHAliotFdpXp+8gyuQ0XTgN1a78VDmUaeFPBUHLIyzB1FAm1Ip40CACH5BAUKAAMALAQABAAKAAoAAAIThI8JIrp84EOsNmplzNjo6mhGAQAh+QQFCgADACwFAAUACQAJAAACEYQvAomcumB8p0nLTKZUq1wVACH5BAUKAAMALAUABQAJAAkAAAIShASpdtqcDopyUsuke9zqRQEFACH5BAUKAAMALAUABQAJAAkAAAISBCSmhrnskGrtUHmdhQ/qJQEFADs=) left center no-repeat; }\
             td.highlight { background: #eba; }\
             div.highlight{ background: #ff9; position: absolute; opacity: 0.7; z-index: 1000; }\
-            a.postanchor{ margin: 0 2px; }\
-            a.axfc      { background: #eba; }\
-            a.futalog   { background: #0e0; }\
-            a.axfc, \
+            a.postanchor { margin: 0 2px; }\
+            a.axfc       { background: #eba; }\
+            a.futalog    { background: #0e0; }\
+            a.axfc,\
             a.futalog,\
-            #sidebar a  { display:inline; display:inline-block; padding: 0 4px; \
-                          text-decoration:none; border-radius:4px;}\
-            #sidebar    { padding: 4px; position: fixed; right: 0; \
-                          overflow: auto; \
-                          border: 1px solid #a08070; }\
-            #sidebar div{ text-align:center; font-weight:bold; }\
-            #sidebar ul { padding:0; margin:0; text-align:left; }\
-            #sidebar li { padding:0; margin:0; padding-left: 20px; cursor:pointer;\
-                        background: url(data:image/gif;base64,R0lGODlhEgASAKEAAP///59AO4AAAP//+iH5BAEAAAAALAAAAAASABIAAAI0hI+pyycP40si2IutQDX77XgfJ2ag0ZUaObTuG5xA9dZDTKprqOO8Lkupgj2fQ4JsKJeNAgA7) center left no-repeat; }\
-            #sidebar a { display:block; height: 22px;}\
+            #sidebar a   { display:inline; display:inline-block; padding: 0 4px; \
+                           text-decoration:none; border-radius:4px;}\
+            #sidebar     { padding: 4px; position: fixed; right: 0; \
+                           overflow: auto; \
+                           border: 1px solid #a08070; }\
+            #sidebar div { text-align:center; font-weight:bold; }\
+            #sidebar ul  { padding:0; margin:0; text-align:left; }\
+            #sidebar li,\
+            .collapse    { background: url(data:image/gif;base64,R0lGODlhEgASAKEAAP///59AO4AAAP//+iH5BAEAAAAALAAAAAASABIAAAI0hI+pyycP40si2IutQDX77XgfJ2ag0ZUaObTuG5xA9dZDTKprqOO8Lkupgj2fQ4JsKJeNAgA7) center left no-repeat; }\
+            #sidebar li,\
+            .expand, .expanding, .collapse \
+                         { padding:0; margin:0; padding-left: 20px; cursor:pointer; }\
+            #sidebar a   { display:block; height: 22px;}\
             #sidebar li:hover a,\
                      a.highlight { background: #ff0;}\
-            #stickynav { background: #eba; text-align:center; \
-                         position: fixed; top: 50px; right: 10px; }\
-            .pointer   { background: #a00; padding:1px; margin:1px; cursor:pointer; \
-                         display:inline-block; width:14px; height:14px; \
-                         text-decoration:none; color:#fff; font-size:14px; font-weight:900; \
-                         border:1px solid #000; border-radius:4px; }\
-            .active    { color:#f00; }\
-            .resizeable{ width:auto; height:auto; }\
-            .loading   { opacity: 0.5; }\
+            #stickynav   { background: #eba; text-align:center; \
+                           position: fixed; top: 50px; right: 10px; }\
+            .pointer     { background: #a00; padding:1px; margin:1px; cursor:pointer; \
+                           display:inline-block; width:14px; height:14px; \
+                           text-decoration:none; color:#fff; font-size:14px; font-weight:900; \
+                           border:1px solid #000; border-radius:4px; }\
+            .active      { color:#f00; }\
+            .resizeable  { width:auto; height:auto; }\
+            .loading     { opacity: 0.5; }\
             .overlay-parent { position: relative; display:block; float:left; }\
-            .overlay   { position:absolute; z-index:1000; left:20px; opacity: 0.5;\
-                         background: #00f url(data:image/gif;base64,R0lGODlhKwALAPEAAP///wAAAIKCggAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAKwALAAACMoSOCMuW2diD88UKG95W88uF4DaGWFmhZid93pq+pwxnLUnXh8ou+sSz+T64oCAyTBUAACH5BAkKAAAALAAAAAArAAsAAAI9xI4IyyAPYWOxmoTHrHzzmGHe94xkmJifyqFKQ0pwLLgHa82xrekkDrIBZRQab1jyfY7KTtPimixiUsevAAAh+QQJCgAAACwAAAAAKwALAAACPYSOCMswD2FjqZpqW9xv4g8KE7d54XmMpNSgqLoOpgvC60xjNonnyc7p+VKamKw1zDCMR8rp8pksYlKorgAAIfkECQoAAAAsAAAAACsACwAAAkCEjgjLltnYmJS6Bxt+sfq5ZUyoNJ9HHlEqdCfFrqn7DrE2m7Wdj/2y45FkQ13t5itKdshFExC8YCLOEBX6AhQAADsAAAAAAAAAAAA=) center center no-repeat;}\
-            .fullimg   { border: 1px solid #f00; }\
-            .loaded    { border: 1px dashed #a08070; }\
-            .secret    { border: 1px dashed #a08070; }\
-            #autoscroll{ display:block; margin:0 2px; width: 34px; \
+            .overlay     { position:absolute; z-index:1000; left:20px; opacity: 0.5;\
+                           background: #00f url(data:image/gif;base64,R0lGODlhKwALAPEAAP///wAAAIKCggAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAKwALAAACMoSOCMuW2diD88UKG95W88uF4DaGWFmhZid93pq+pwxnLUnXh8ou+sSz+T64oCAyTBUAACH5BAkKAAAALAAAAAArAAsAAAI9xI4IyyAPYWOxmoTHrHzzmGHe94xkmJifyqFKQ0pwLLgHa82xrekkDrIBZRQab1jyfY7KTtPimixiUsevAAAh+QQJCgAAACwAAAAAKwALAAACPYSOCMswD2FjqZpqW9xv4g8KE7d54XmMpNSgqLoOpgvC60xjNonnyc7p+VKamKw1zDCMR8rp8pksYlKorgAAIfkECQoAAAAsAAAAACsACwAAAkCEjgjLltnYmJS6Bxt+sfq5ZUyoNJ9HHlEqdCfFrqn7DrE2m7Wdj/2y45FkQ13t5itKdshFExC8YCLOEBX6AhQAADsAAAAAAAAAAAA=) center center no-repeat;}\
+            .fullimg     { border: 1px solid #f00; }\
+            .loaded      { border: 1px dashed #a08070; }\
+            .secret      { border: 1px dashed #a08070; }\
+            #autoscroll  { display:block; margin:0 2px; width: 34px; \
                          border: 1px solid #a08070; }\n\
           </style>').appendTo('head');
+
         //futalog links
         var futalog = {
             su : 'nijibox5.com/futabafiles/tubu/src/', /* 12 */
@@ -184,8 +195,7 @@
             ss : 'nijibox5.com/futabafiles/kobin/src/',/* 24 */
             sq : 'nijibox6.com/futabafiles/mid/src/auth.redirect.php?',  /* 48 key */
             sp : 'nijibox2.com/futabafiles/003/src/'   /* 60 */
-        };
-        var futaAlt = 's[uaspq]';
+        },  futaAlt = 's[uaspq]';
         //axfc uploader links
         var axfc = {//didn't use full names but
             Sc: "Scandium",  He: "Helium",    Ne: "Neon",      H:  "Hydrogen",
@@ -194,14 +204,12 @@
             Ar: "Argon",     B:  "Boron",     K:  "Potassium", F:  "Fluorine",
             Be: "Beryllium", Na: "Sodium",    Ca: "Calcium",   Mg: "Magnesium",
             Cl: "Chlorine"
-        };
-        var axfcAlt      = '[FKOP]|C[al]?|N[ae]?|S[ci]?|A[lr]|Be?|He?|Li|Mg';
+        },  axfcAlt      = '[FKOP]|C[al]?|N[ae]?|S[ci]?|A[lr]|Be?|He?|Li|Mg';
+
         //////////////////
-        var aId          = 0;
-        var basehref     = location.href.split('#')[0];
-        var $placeholder = $('<ul/>');
-        var $highlight   = $();
-        var sidebar      = {};
+        var aId          = 0,
+            sidebar      = {},
+            $placeholder = $('<ul/>');
         var addToSidebar = function(m, aId, attributes){
             if(sidebar[m]){
                 var $li = $('#'+m, $placeholder);
@@ -220,7 +228,7 @@
         $.fn.processDoc = function(url){
             timeit && console.time("processing: " + url);
             $context = $(this);
-            $context.css({display: 'none'});
+            $context.css({display: 'none'});//hide()
             $context.find('#rightad').remove();
             //expose mailto hidden messages
             var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
@@ -235,7 +243,7 @@
                     return true;
                 $(this).after($('<span/>',{html: decodeURI(text), 'class':'secret'}))
             });
-            //add post anchor link and axfc uploader links
+            ////add post anchor link and axfc uploader links
             // var $parent     = $context.parent(), 
             //     $nexSibling = $context.next(), 
             //     $offDOM     = $context.detach();//clone(true,true);
@@ -276,9 +284,9 @@
             // } else {
             //      $context = $offDOM.insertBefore($nexSibling);
             // }
-            $context.css({display: 'block'});
+            $context.css({display: 'block'});//show()
 
-            //add found links to futalog or axfc uploader to sidebar
+            //add found links to futalog or axfc uploader to sidebar and recalculate height
             if($placeholder.children().length > 0){
                 //if($placeholder.parent('body').length === 0)
                 var $sidebar = $('#sidebar');
@@ -325,28 +333,33 @@
             timeit && console.timeEnd("processing: " + url);
             return $context;
         };
+
         //remove ads, comment if you like them :D
         $('td.chui > div, iframe').remove();
         //#ufm + div, hr + b,
         $('#ufm').next('div').remove();
         $('hr').next('b').remove();
+
         ///inital parse
+        var basehref = location.href.split('#')[0];
         $contentForm = $('form').eq(1);
         if( $contentForm.length === 0)//for yakumo-family.com
             $contentForm = $('body');/*.wrapInner($('<div/>')).first();*/
         $contentForm.processDoc(basehref);
+
         //add post highlight
+        var $highlight = $();
         $contentForm.on('click', 'a.postanchor', function(e){
             $highlight.removeClass('highlight');
             $highlight = $(this.hash).closest('td').addClass('highlight');
         });
-        ///////////
         if(location.hash)//don't need to fire click
             $highlight = $(location.hash).closest('td').addClass('highlight');
 
-        //add image expanding on click
-        $contentForm.on('click', 'img', function(e) {
-            e.preventDefault(); 
+        //add image expansion on click
+        $contentForm.on('click', /*a>*/'img', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
             var $img = $(this);
             if(!$img.data('srcfull')){
                 var href = $img.parent().attr('href');
@@ -361,38 +374,52 @@
                             $img.removeClass('fullimg');
                     })
                     .before($('<div/>',{'class': 'overlay'})
+                            .click(function(e){ return false })
                             .width( $img.outerWidth())
                             .height($img.outerHeight())
-                            /*.css({left:$img.offset().left})*/
-                            .hide()
+                            .show()
                     )
                     .parent()
-                        .addClass('overlay-parent');
-
+                        .addClass('overlay-parent')
             }
             var src = $img.data('srcalt');
             $img.data('srcalt',$img.attr('src'))
                 .attr('src', src)
                 .prev('div.overlay')
-                    .show()
+                    .show();
         });
+
         //add inline thread expansion
-        $contentForm.find("font").filter("[color=#707070]").filter(":contains('レス')")
-            .css('cursor', 'pointer')
-            .click(function(e) {
-                var prev = $(this).prevUntil("a:contains('返信'), small").last().prev().get(0);
-                if( prev.tagName === 'small') return;
-                $self = $(this).next('br').remove().end();
-                $.get(prev.href, {}, function(data) {//$prev.attr('href')
+        $contentForm.find('font').filter('[color=#707070]').filter(":contains('レス')")
+            .addClass('expand')
+            .one('click',function(e) {
+                var $self = $(this);
+                var prev = $self.prevUntil("a:contains('返信'), small").last().prev().get(0);
+                if( prev.tagName === 'small') 
+                    return;//how come?
+                $self.toggleClass('expand expanding').next('br').remove();
+                $.get(prev.href, {}, function(data) {
+                    $self.toggleClass('expanding collapse')
+                         .data('expanded',true);
+                    //$self.nextUntil('hr').remove();//without slicing
                     $(data).filter('form')
                             .eq(1)
                             .find('table')
-                            .slice(0, -10)/*or untilNext($self.next())*/
+                            .slice(0, -10) /* can take more than is needed*/
                             .processDoc(prev.href)
-                            .replaceAll($self)//$self.nextUntil('hr').andSelf()
+                            .insertAfter($self)
                             .wrapAll('<div class="loaded"/>')
                 })
+            })
+            .click(function(e){
+                var $self = $(this);
+                if( $self.data('expanded')) {
+                    $self.toggleClass('collapse expand')
+                         .next('div.loaded')
+                            .toggle();
+                }
             });
+
         //add top/bottom sticky nav and autoscroll
         var autoscroll = new Counter({interval:200});
         $('body')
@@ -430,6 +457,7 @@
                     })
                 })
             );
+
         //add autorefresh and counter
         var $contres = $('#contres a');
         if( $contres.length){
@@ -442,7 +470,7 @@
                 oncomplete: function()    { $contres.click() }            
             });
             var chBox = $('<input/>', {type:'checkbox'})
-                .appendTo($('<label/>', {text:"[Auto]"}).insertBefore($timer))
+                .appendTo($('<label/>', {text:'[Auto]'}).insertBefore($timer))
                 .change(function(){
                     if(counter.isRunning()) {//stop autorefresh
                         counter.stop();
