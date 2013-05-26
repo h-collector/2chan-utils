@@ -2,7 +2,7 @@
 // @author      h-collector <githcoll@gmail.com>
 // @name        2chan-utils
 // @namespace   https://gist.github.com/h-collector/
-// @description Script for 2chan.net futaba board and archieved threads on yakumo-family.com adding useful functions
+// @description Script for 2chan.net futaba board and archived threads on yakumo-family.com adding useful functions
 // @include     http://*.2chan.net/*
 // @exclude     http://*.2chan.net/*/src/*
 // @include     http://yakumo-family.com/fdat/*
