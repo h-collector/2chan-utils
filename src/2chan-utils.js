@@ -10,8 +10,9 @@
 // @include     http://www.yakumo-family.com/fdat/*
 // @include     http://www.yakumo-family.com/f*dat/*
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
-// @homepageURL https://gist.github.com/h-collector/5471519#file-2chan-utils-js
-// @history     1.0.6 add cached links count, some refactoring, added max height/width
+// @homepageURL https://github.com/h-collector/2chan-utils
+// @update      https://raw.github.com/h-collector/2chan-utils/master/src/includes/2chan-utils.js
+// @history     1.0.6 add cached links count, some refactoring, added constriction on max image height/width
 // @history     1.0.5 fix: userjs @include/exclude/require declarations (overlay on image page, no www on yakumo-family)
 // @history     1.0.4 fix: clicking on image while loading open link, a little code reformat, added more icons
 // @history     1.0.3 minor changes
@@ -167,8 +168,9 @@
 
         //add styles
         $('<style type="text/css">'
-            //+'body {background-color: #121212} body,tr,td,th {font-size: 10pt !important} a.del {color: #222222} a:hover {color: #888888} .delform {position: absolute;right: 0;white-space: nowrap;text-align: center} td {color: #aaaacc !important;background-color: #222222 !important;border-radius: 10px;max-width: 800px}'
-            +'a.del {color: #222222} a:hover {color: #888888} td {border-radius: 10px}'
+            +'a.del        { color: #222}'
+            +'a.del:hover  { color: #888}'
+            +'td           { border-radius: 10px}'
             +'hr           { clear:both;}'
             +'.expand      { background: url(data:image/gif;base64,R0lGODlhEgASAKEAAAQCBPz+/IQCBJxCPCH5BAEAAAAALAAAAAASABIAAAI7hI+pyycP40ti2IutQBWHkG1O9oUcCWKi0V2len7yDK5ARdOD3VrvxUOZRp4U8FQcsjLMHUUCbUinjQIAOw==) center left no-repeat; }'
             +'.expanding   { background: url(data:image/gif;base64,R0lGODlhEgASAJEDAJ9AO4AAAP//+v///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgADACwAAAAAEgASAAACO5yPqcsXD+NLAdiLbUAVC5FtTvaFHAliotFdpXp+8gyuQ0XTgN1a78VDmUaeFPBUHLIyzB1FAm1Ip40CACH5BAUKAAMALAQABAAKAAoAAAIThI8JIrp84EOsNmplzNjo6mhGAQAh+QQFCgADACwFAAUACQAJAAACEYQvAomcumB8p0nLTKZUq1wVACH5BAUKAAMALAUABQAJAAkAAAIShASpdtqcDopyUsuke9zqRQEFACH5BAUKAAMALAUABQAJAAkAAAISBCSmhrnskGrtUHmdhQ/qJQEFADs=) left center no-repeat; }'
