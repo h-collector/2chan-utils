@@ -80,11 +80,11 @@
             linkifyFutaba  : true,
             linkifyPosts   : true
         };
-        if (widget !== 'undefined'){
-            for (var prop in options)
-                if (typeof widget.preferences[prop] !== "undefined")
-                    options.prop = widget.preferences.getItem(prop);
-        }
+        // if (widget !== 'undefined'){
+        //     for (var prop in options)
+        //         if (typeof widget.preferences[prop] !== "undefined")
+        //             options.prop = widget.preferences.getItem(prop);
+        // }
         options.timeit && console.time("2chan-utils");
         console.log('jQuery version: ' + $().jquery + ' Script version: 1.0.6');
 
