@@ -10,8 +10,11 @@
 // @include     http://www.yakumo-family.com/fdat/*
 // @include     http://www.yakumo-family.com/f*dat/*
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
+// @updateOEX   https://raw.github.com/h-collector/2chan-utils/master/build/2chan-utils.oex
 // @homepageURL https://github.com/h-collector/2chan-utils
-// @update      https://raw.github.com/h-collector/2chan-utils/master/src/includes/2chan-utils.js
+// @downloadURL https://raw.github.com/h-collector/2chan-utils/master/src/includes/2chan-utils.js
+// @updateURL   https://raw.github.com/h-collector/2chan-utils/master/2chan-utils.meta.js
+// @history     1.0.7 add some greasemonkey specific things, some changes to image expansion (dimensions display)
 // @history     1.0.6 add cached links count, some refactoring, added constriction on max image height/width
 // @history     1.0.5 fix: userjs @include/exclude/require declarations (overlay on image page, no www on yakumo-family)
 // @history     1.0.4 fix: clicking on image while loading open link, a little code reformat, added more icons
@@ -19,11 +22,12 @@
 // @history     1.0.2 fixed and improved sidebar, added goto link, fixed autoscroll
 // @history     1.0.1 partially fix sideeffect of reverse node traversal on sidebar
 // @history     1.0   initial release
-// @version     1.0.6
-// @date        2013-05-26
+// @version     1.0.7
+// @date        2013-07-01
 // @license     GPL
+// @grant       none
 // ==/UserScript==
-
+//
 //  Features:
 //  - inline image expansion, 
 //  - inline thread expansion,
@@ -31,9 +35,10 @@
 //  - single post anchoring and post highlight , 
 //  - futalog and axfc uploader autolinking with highlight and unique links in sidebar 
 //  - page autorefresh on new content, 
-// - removing ads. 
-//  To use with eg. opera scripter (tested), or using converter to oex on opera (tested)
-//  Should be used in domready event, didn't really try on greasemonkey but should work
+//  - removing ads. 
+//  To use on opera:   with eg. opera scripter (tested), using converter to oex on opera (tested, also provided .oex build)
+//         on firefox: with greasemonkey (tested)
+//  Should be used in domready event
 
 (function(){
     if (window.document.readyState == 'complete'){
@@ -67,14 +72,20 @@
     }
 
     function run($){
-        var timeit             = true,
-            optConstrictWidth  = true,
-            optConstrictHeight = true,
-            optLinkifyAxfc     = true,
-            optLinkifyFutaba   = true,
-            optLinkifyPosts    = true;
-
-        timeit && console.time("2chan-utils");
+        var options = {
+            timeit         : true,
+            constrictWidth : true,
+            constrictHeight: true,
+            linkifyAxfc    : true,
+            linkifyFutaba  : true,
+            linkifyPosts   : true
+        };
+        if (widget !== 'undefined'){
+            for (var prop in options)
+                if (typeof widget.preferences[prop] !== "undefined")
+                    options.prop = widget.preferences.getItem(prop);
+        }
+        options.timeit && console.time("2chan-utils");
         console.log('jQuery version: ' + $().jquery + ' Script version: 1.0.6');
 
         var windowWidth,
@@ -255,15 +266,15 @@
             };
         //process contexted form
         $.fn.processDoc = function(url){
-            timeit && console.time("processing: " + url);
+            options.timeit && console.time("processing: " + url);
             var $context = $(this),
                 pattern = [],
                 replace = [];
-            if(optLinkifyPosts) {/* post number */
+            if(options.linkifyPosts) {/* post number */
                 pattern.push(/\bNo\.(\d+)\b/g);
                 replace.push('<a href="'+url+'#delcheck$1" class="postanchor">$&</a>');
             }
-            if(optLinkifyAxfc){  /* axfc links */
+            if(options.linkifyAxfc){  /* axfc links */
                 pattern.push(new RegExp("(" + axfcAlt + ")_([0-9]{4,8})",'g')); 
                 replace.push(function(m, pre, num){
                                 return '<a id="a'+(++aId)+'"' 
@@ -271,7 +282,7 @@
                                     + '>'+m+'</a>'
                             });
             }
-            if(optLinkifyFutaba){/* futalog links */
+            if(options.linkifyFutaba){/* futalog links */
                 pattern.push(new RegExp("(" + futaAlt + ")[0-9]{5,7}",'g'));    
                 replace.push(function(m, pre){
                                 return '<a id="a'+(++aId)+'"' 
@@ -360,7 +371,7 @@
                     height: pHeight 
                 });
             }
-            timeit && console.timeEnd("processing: " + url);
+            options.timeit && console.timeEnd("processing: " + url);
             return $context;
         };
 
@@ -438,9 +449,9 @@
             var  src    = data.srcalt;
             data.srcalt = $img.attr('src');
 
-            if(optConstrictWidth)
+            if(options.constrictWidth)
                 $img.css('max-width',  windowWidth);
-            if(optConstrictHeight)
+            if(options.constrictHeight)
                 $img.css('max-height', windowHeight);
             $img.attr('src', src)
                 .prev('div.overlay')
@@ -549,6 +560,6 @@
                 }
             }
         }
-        timeit && console.timeEnd("2chan-utils");
+        options.timeit && console.timeEnd("2chan-utils");
     }
 })();

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<widget xmlns="http://www.w3.org/ns/widgets" version="1.0.6" id="extensions:2chan-utils">
-	<name>2chan-utils</name>
-	<description>Script for 2chan.net futaba board and archived threads on yakumo-family.com adding useful functions</description>
-	<author href="https://gist.github.com/h-collector/">h-collector &lt;githcoll@gmail.com&gt;</author>
+<widget xmlns="http://www.w3.org/ns/widgets" version="1.0.7" id="extensions:2chan-utils">
+    <name>2chan-utils</name>
+    <description>Script for 2chan.net futaba board and archived threads on yakumo-family.com adding useful functions</description>
+    <author href="https://gist.github.com/h-collector/">h-collector &lt;githcoll@gmail.com&gt;</author>
 </widget>
