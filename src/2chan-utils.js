@@ -92,7 +92,7 @@
                 }
         }
         options.timeit && console.time("2chan-utils");
-        console.log('jQuery version: ' + $().jquery + ' Script version: 1.0.6');
+        console.log('jQuery version: ' + $().jquery + ' Script version: 1.0.8');
 
         var windowWidth,
             windowHeight,
@@ -416,7 +416,8 @@
                 var  href    = $img.parent().attr('href');
                 data.srcfull = href;
                 data.srcalt  = href;
-                $img.addClass('resizeable')
+                $img.removeAttr('style')
+                    .addClass('resizeable')
                     .bind('load', function() {
                         //$img.prev('div.overlay').remove();
                         var $img    = $(this),
