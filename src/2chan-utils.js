@@ -9,11 +9,14 @@
 // @include     http://yakumo-family.com/f*dat/*
 // @include     http://www.yakumo-family.com/fdat/*
 // @include     http://www.yakumo-family.com/f*dat/*
+// @include     http://k3-bbs.com/k305/*
+// @exclude     http://*.com/k3bbs/k305/src/*
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
 // @updateOEX   https://raw.github.com/h-collector/2chan-utils/master/build/2chan-utils.oex
 // @homepageURL https://github.com/h-collector/2chan-utils
 // @downloadURL https://raw.github.com/h-collector/2chan-utils/master/src/includes/2chan-utils.js
 // @updateURL   https://raw.github.com/h-collector/2chan-utils/master/2chan-utils.meta.js
+// @history     1.0.8 added http://k3-bbs.com/k305/ fixed typo
 // @history     1.0.7 add some greasemonkey specific things, some changes to image expansion (dimensions display)
 // @history     1.0.6 add cached links count, some refactoring, added constriction on max image height/width
 // @history     1.0.5 fix: userjs @include/exclude/require declarations (overlay on image page, no www on yakumo-family)
@@ -22,7 +25,7 @@
 // @history     1.0.2 fixed and improved sidebar, added goto link, fixed autoscroll
 // @history     1.0.1 partially fix sideeffect of reverse node traversal on sidebar
 // @history     1.0   initial release
-// @version     1.0.7
+// @version     1.0.8
 // @date        2013-07-01
 // @license     GPL
 // @grant       none
@@ -80,11 +83,14 @@
             linkifyFutaba  : true,
             linkifyPosts   : true
         };
-        // if (widget !== 'undefined'){
-        //     for (var prop in options)
-        //         if (typeof widget.preferences[prop] !== "undefined")
-        //             options.prop = widget.preferences.getItem(prop);
-        // }
+        if (typeof widget !== 'undefined'){
+            for (var prop in options)
+                if (typeof widget.preferences[prop] !== "undefined"){
+                    options[prop] = widget.preferences.getItem(prop);
+                } else {
+                    widget.preferences.setItem(prop, options[prop]);
+                }
+        }
         options.timeit && console.time("2chan-utils");
         console.log('jQuery version: ' + $().jquery + ' Script version: 1.0.6');
 
@@ -137,7 +143,7 @@
         }
         String.prototype.replaceArray = function(find, replace) {
             var replaceString = this;
-            for (var i = 0, len = find.length; i < len; i++)
+            for (var i = 0, len = find.length; i < len; ++i)
                 replaceString = replaceString.replace(find[i], replace[i]);
             return replaceString
         };
@@ -178,7 +184,7 @@
         };
 
         //add styles
-        $('<style type="text/css">'
+        var $style = $('<style type="text/css">'
             +'a.del        { color: #222}'
             +'a.del:hover  { color: #888}'
             +'td           { border-radius: 10px}'
@@ -225,7 +231,7 @@
             +'.secret      { border: 1px dashed #a08070; }'
             +'#autoscroll  { display:block; margin:0 2px; width: 34px; '
                            +'border: 1px solid #a08070; }'
-            +'</style>').appendTo('head');
+            +'</style>');
 
         //utalog links
         var futalog = {
@@ -271,7 +277,7 @@
                 pattern = [],
                 replace = [];
             if(options.linkifyPosts) {/* post number */
-                pattern.push(/\bNo\.(\d+)\b/g);
+                pattern.push(/[^>]\bNo\.(\d+)\b/g);
                 replace.push('<a href="'+url+'#delcheck$1" class="postanchor">$&</a>');
             }
             if(options.linkifyAxfc){  /* axfc links */
@@ -387,6 +393,9 @@
         if( $contentForm.length === 0)//for yakumo-family.com
             $contentForm = $('body');/*.wrapInner($('<div/>')).first();*/
         $contentForm.processDoc(basehref);
+
+        //add style to page
+        $style.appendTo('head');
 
         //add post highlight
         var $highlight = $();

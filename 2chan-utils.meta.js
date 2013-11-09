@@ -9,11 +9,14 @@
 // @include     http://yakumo-family.com/f*dat/*
 // @include     http://www.yakumo-family.com/fdat/*
 // @include     http://www.yakumo-family.com/f*dat/*
+// @include     http://k3-bbs.com/k305/*
+// @exclude     http://*.com/k3bbs/k305/src/*
 // @require     https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
 // @updateOEX   https://raw.github.com/h-collector/2chan-utils/master/build/2chan-utils.oex
 // @homepageURL https://github.com/h-collector/2chan-utils
 // @downloadURL https://raw.github.com/h-collector/2chan-utils/master/src/includes/2chan-utils.js
 // @updateURL   https://raw.github.com/h-collector/2chan-utils/master/2chan-utils.meta.js
+// @history     1.0.8 added http://k3-bbs.com/k305/ fixed typo
 // @history     1.0.7 add some greasemonkey specific things, some changes to image expansion (dimensions display)
 // @history     1.0.6 add cached links count, some refactoring, added constriction on max image height/width
 // @history     1.0.5 fix: userjs @include/exclude/require declarations (overlay on image page, no www on yakumo-family)
@@ -22,7 +25,7 @@
 // @history     1.0.2 fixed and improved sidebar, added goto link, fixed autoscroll
 // @history     1.0.1 partially fix sideeffect of reverse node traversal on sidebar
 // @history     1.0   initial release
-// @version     1.0.7
+// @version     1.0.8
 // @date        2013-07-01
 // @license     GPL
 // @grant       none
